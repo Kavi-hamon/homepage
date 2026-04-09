@@ -41,8 +41,9 @@ services:
   # ---------------------------------------------------------------------------
   # Angular frontend — served as a static site
   # ---------------------------------------------------------------------------
-  - type: static
+  - type: web
     name: homepage-frontend      # → https://homepage-frontend.onrender.com
+    runtime: static
     buildCommand: >-
       cd homepage && npm ci && npm run build &&
       if [ -f dist/homepage/browser/index.csr.html ]; then
