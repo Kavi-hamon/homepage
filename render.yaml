@@ -50,10 +50,3 @@ services:
         cp dist/homepage/browser/index.csr.html dist/homepage/browser/index.html;
       fi
     staticPublishPath: homepage/dist/homepage/browser
-    # Cross-service proxying (/api/* and /auth/* → backend) is handled by
-    # homepage/public/_redirects using Render's 200-rewrite (proxy) syntax.
-    routes:
-      # Angular SPA fallback — all unmatched paths serve index.html
-      - type: rewrite
-        source: /*
-        destination: /index.html
