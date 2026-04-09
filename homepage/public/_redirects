@@ -1,0 +1,2 @@
+/api/*   https://homepage-api.onrender.com/api/:splat   200
+/auth/*  https://homepage-api.onrender.com/auth/:splat  200
