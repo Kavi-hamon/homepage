@@ -9,9 +9,9 @@ services:
   # ---------------------------------------------------------------------------
   - type: web
     name: homepage-api           # → https://homepage-api.onrender.com
-    runtime: docker
-    dockerfilePath: infra/docker/server.Dockerfile
-    dockerContext: .             # build context = repo root
+    runtime: go
+    buildCommand: cd server && go build -mod=vendor -ldflags="-s -w" -o ../homepage-api .
+    startCommand: ./homepage-api
     plan: free
     healthCheckPath: /api/healthz
     envVars:
