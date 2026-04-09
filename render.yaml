@@ -41,16 +41,14 @@ services:
   # ---------------------------------------------------------------------------
   # Angular frontend — served as a static site
   # ---------------------------------------------------------------------------
-  - type: web
+  - type: static
     name: homepage-frontend      # → https://homepage-frontend.onrender.com
-    runtime: static
     buildCommand: >-
       cd homepage && npm ci && npm run build &&
       if [ -f dist/homepage/browser/index.csr.html ]; then
         cp dist/homepage/browser/index.csr.html dist/homepage/browser/index.html;
       fi
     staticPublishPath: homepage/dist/homepage/browser
-    plan: free
     # Cross-service proxying (/api/* and /auth/* → backend) is handled by
     # homepage/public/_redirects using Render's 200-rewrite (proxy) syntax.
     routes:
