@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: homepage
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - mongo-service.yaml
+  - mongo-statefulset.yaml
+  - api-service.yaml
+  - api-deployment.yaml
+  - frontend-service.yaml
+  - frontend-deployment.yaml
+  - ingress.yaml

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-config
+data:
+  # Replace YOUR_NODE_IP with your OCI node's public IP (e.g. 130.61.x.x)
+  # Frontend runs at http://YOUR_NODE_IP:30420
+  FRONTEND_ORIGIN: "http://YOUR_NODE_IP:30420"
+  OAUTH_REDIRECT_URL: "http://YOUR_NODE_IP:30808/auth/google/callback"

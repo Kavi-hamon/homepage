@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-config
+data:
+  # Your frontend is accessed via NodePort on the minikube node IP:
+  #   http://<minikube-ip>:30420
+  FRONTEND_ORIGIN: "https://responsibilities-reservations-combat-structured.trycloudflare.com "
+
+  # Google rejects redirects that use raw IPs/private DNS in many cases.
+  # Using localhost works well for dev, but you must run:
+  #   kubectl -n homepage port-forward svc/api 8080:8080
+  OAUTH_REDIRECT_URL: "https://responsibilities-reservations-combat-structured.trycloudflare.com/auth/google/callback"

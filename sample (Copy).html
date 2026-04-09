@@ -1,0 +1,940 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Home Page</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #0a0e27;
+      --bg-secondary: #111729;
+      --bg-card: rgba(255, 255, 255, 0.03);
+      --bg-card-hover: rgba(255, 255, 255, 0.06);
+      --border: rgba(255, 255, 255, 0.08);
+      --text-primary: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent: #6366f1;
+      --accent-hover: #7c3aed;
+      --accent-light: rgba(99, 102, 241, 0.1);
+      --success: #10b981;
+      --danger: #ef4444;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: url('/home/kavi/Downloads/browerImg.jpg') center/cover no-repeat fixed;
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 24px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    @keyframes gradientShift {
+
+      0%,
+      100% {
+        transform: translate(0, 0);
+      }
+
+      50% {
+        transform: translate(-30%, -30%);
+      }
+    }
+
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+      animation: fadeInDown 0.6s ease-out;
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .time-display {
+      font-size: 4rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .date-display {
+      font-size: 1.125rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .search-container {
+      max-width: 600px;
+      margin: 0 auto 48px;
+      animation: fadeInUp 0.6s ease-out 0.1s both;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .search-box {
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    #searchInput {
+      width: 100%;
+      padding: 18px 20px 18px 56px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      color: var(--text-primary);
+      font-size: 1rem;
+      font-family: inherit;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(20px);
+    }
+
+    #searchInput:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: var(--bg-card-hover);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+
+    #searchInput::placeholder {
+      color: var(--text-muted);
+    }
+
+    .section-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      padding-left: 4px;
+    }
+
+    .bookmarks-section {
+      margin-bottom: 48px;
+      animation: fadeInUp 0.6s ease-out 0.2s both;
+    }
+
+    .groups-section {
+      margin-bottom: 48px;
+      animation: fadeInUp 0.6s ease-out 0.25s both;
+    }
+
+    .groups-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .group-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      backdrop-filter: blur(20px);
+      transition: all 0.3s ease;
+    }
+
+    .group-card:hover {
+      border-color: rgba(255, 255, 255, 0.12);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .group-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .group-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--accent-light);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+
+    .group-info {
+      flex: 1;
+    }
+
+    .group-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .group-count {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .group-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .group-links {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .group-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      text-decoration: none;
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+      font-size: 0.875rem;
+    }
+
+    .group-link:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent);
+      transform: translateX(4px);
+    }
+
+    .group-link-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+    }
+
+    .group-link-text {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .open-all-btn {
+      margin-top: 12px;
+      width: 100%;
+      justify-content: center;
+      font-size: 0.8rem;
+    }
+
+    .bookmarks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .bookmark-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      color: inherit;
+      backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bookmark-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .bookmark-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .bookmark-card:hover::before {
+      opacity: 0.05;
+    }
+
+    .bookmark-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 12px;
+      background: var(--accent-light);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      transition: all 0.3s ease;
+      position: relative;
+      z-index: 1;
+    }
+
+    .bookmark-card:hover .bookmark-icon {
+      background: var(--accent);
+      transform: scale(1.1);
+    }
+
+    .bookmark-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      position: relative;
+      z-index: 1;
+    }
+
+    .widgets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      animation: fadeInUp 0.6s ease-out 0.3s both;
+    }
+
+    .widget {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      backdrop-filter: blur(20px);
+      transition: all 0.3s ease;
+    }
+
+    .widget:hover {
+      border-color: rgba(255, 255, 255, 0.12);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .widget-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .widget-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .widget-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+      color: white;
+    }
+
+    .btn-icon {
+      padding: 8px;
+      min-width: 36px;
+      justify-content: center;
+    }
+
+    .todo-form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .todo-input {
+      flex: 1;
+      padding: 12px 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+
+    .todo-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+
+    .todo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .todo-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .todo-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .todo-list::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    .todo-list::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: all 0.2s ease;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .todo-item:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .todo-checkbox {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: var(--accent);
+    }
+
+    .todo-text {
+      flex: 1;
+      color: var(--text-primary);
+      font-size: 0.875rem;
+    }
+
+    .todo-item.completed .todo-text {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .todo-delete {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      font-size: 1.25rem;
+      line-height: 1;
+    }
+
+    .todo-delete:hover {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    .notes-textarea {
+      width: 100%;
+      min-height: 200px;
+      padding: 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      font-family: inherit;
+      resize: vertical;
+      transition: all 0.2s ease;
+    }
+
+    .notes-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+
+    .save-indicator {
+      font-size: 0.75rem;
+      color: var(--success);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .save-indicator.show {
+      opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+      .time-display {
+        font-size: 2.5rem;
+      }
+
+      .bookmarks-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 12px;
+      }
+
+      .widgets-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <header>
+      <div class="time-display" id="timeDisplay">00:00</div>
+      <div class="date-display" id="dateDisplay">Loading...</div>
+    </header>
+
+    <div class="search-container">
+      <div class="search-box">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Search the web..." />
+      </div>
+    </div>
+
+    <section class="bookmarks-section">
+      <h2 class="section-title">Quick Access</h2>
+      <div class="bookmarks-grid" id="bookmarksGrid">
+        <a href="https://github.com/Robustrade" class="bookmark-card" target="_blank">
+          <div class="bookmark-icon">🐙</div>
+          <div class="bookmark-title">GitHub</div>
+        </a>
+        <a href="https://mail.google.com" class="bookmark-card" target="_blank">
+          <div class="bookmark-icon">📧</div>
+          <div class="bookmark-title">Gmail</div>
+        </a>
+        <a href="https://youtube.com" class="bookmark-card" target="_blank">
+          <div class="bookmark-icon">▶️</div>
+          <div class="bookmark-title">YouTube</div>
+        </a>
+      </div>
+    </section>
+
+    <section class="groups-section">
+      <h2 class="section-title">Website Groups</h2>
+      <div class="groups-grid" id="groupsGrid"></div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Widgets</h2>
+      <div class="widgets-grid">
+        <div class="widget">
+          <div class="widget-header">
+            <h3 class="widget-title">Todo List</h3>
+            <div class="widget-actions">
+              <button class="btn btn-icon" id="clearTodos" title="Clear all">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <form class="todo-form" id="todoForm">
+            <input type="text" class="todo-input" id="todoInput" placeholder="Add a new task..." />
+            <button type="submit" class="btn btn-primary">Add</button>
+          </form>
+          <div class="todo-list" id="todoList">
+            <div class="empty-state">No tasks yet. Add one to get started!</div>
+          </div>
+        </div>
+
+        <div class="widget">
+          <div class="widget-header">
+            <h3 class="widget-title">Quick Notes</h3>
+            <span class="save-indicator" id="saveIndicator">✓ Saved</span>
+          </div>
+          <textarea class="notes-textarea" id="notesArea" placeholder="Type your notes here..."></textarea>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Time and Date
+    function updateTime() {
+      const now = new Date();
+      const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      const date = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+      document.getElementById('timeDisplay').textContent = time;
+      document.getElementById('dateDisplay').textContent = date;
+    }
+
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    // Search
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const query = searchInput.value.trim();
+        if (query) {
+          window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+        }
+      }
+    });
+
+    // Todo List
+    const TODOS_KEY = 'browser_home_todos';
+    const todoForm = document.getElementById('todoForm');
+    const todoInput = document.getElementById('todoInput');
+    const todoList = document.getElementById('todoList');
+    const clearTodosBtn = document.getElementById('clearTodos');
+
+    let todos = [];
+
+    function loadTodos() {
+      const stored = localStorage.getItem(TODOS_KEY);
+      todos = stored ? JSON.parse(stored) : [];
+      renderTodos();
+    }
+
+    function saveTodos() {
+      localStorage.setItem(TODOS_KEY, JSON.stringify(todos));
+    }
+
+    function renderTodos() {
+      if (todos.length === 0) {
+        todoList.innerHTML = '<div class="empty-state">No tasks yet. Add one to get started!</div>';
+        return;
+      }
+
+      todoList.innerHTML = todos.map((todo, index) => `
+        <div class="todo-item ${todo.completed ? 'completed' : ''}">
+          <input type="checkbox" class="todo-checkbox" ${todo.completed ? 'checked' : ''} data-index="${index}">
+          <span class="todo-text">${escapeHtml(todo.text)}</span>
+          <button class="todo-delete" data-index="${index}">×</button>
+        </div>
+      `).join('');
+
+      // Add event listeners
+      todoList.querySelectorAll('.todo-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+          const index = parseInt(e.target.dataset.index);
+          todos[index].completed = e.target.checked;
+          saveTodos();
+          renderTodos();
+        });
+      });
+
+      todoList.querySelectorAll('.todo-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const index = parseInt(e.target.dataset.index);
+          todos.splice(index, 1);
+          saveTodos();
+          renderTodos();
+        });
+      });
+    }
+
+    todoForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = todoInput.value.trim();
+      if (text) {
+        todos.unshift({ text, completed: false });
+        saveTodos();
+        renderTodos();
+        todoInput.value = '';
+      }
+    });
+
+    clearTodosBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to clear all tasks?')) {
+        todos = [];
+        saveTodos();
+        renderTodos();
+      }
+    });
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Notes
+    const NOTES_KEY = 'browser_home_notes';
+    const notesArea = document.getElementById('notesArea');
+    const saveIndicator = document.getElementById('saveIndicator');
+    let saveTimeout;
+
+    function loadNotes() {
+      const stored = localStorage.getItem(NOTES_KEY);
+      if (stored) {
+        notesArea.value = stored;
+      }
+    }
+
+    function saveNotes() {
+      localStorage.setItem(NOTES_KEY, notesArea.value);
+      showSaveIndicator();
+    }
+
+    function showSaveIndicator() {
+      saveIndicator.classList.add('show');
+      setTimeout(() => {
+        saveIndicator.classList.remove('show');
+      }, 2000);
+    }
+
+    notesArea.addEventListener('input', () => {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(saveNotes, 500);
+    });
+
+    // Website Groups
+    const GROUPS_KEY = 'browser_home_groups';
+    const groupsGrid = document.getElementById('groupsGrid');
+
+    const defaultGroups = [
+      {
+        id: 'test',
+        title: 'Test',
+        icon: '💻',
+        links: [
+          { title: 'GitHub', url: 'https://github.com', icon: '🐙' },
+          { title: 'Stack Overflow', url: 'https://stackoverflow.com', icon: '📚' },
+          { title: 'MDN Web Docs', url: 'https://developer.mozilla.org', icon: '📖' },
+          { title: 'CodePen', url: 'https://codepen.io', icon: '✒️' }
+        ]
+      },
+      {
+        id: 'social',
+        title: 'Social Media',
+        icon: '🌐',
+        links: [
+          { title: 'Twitter', url: 'https://twitter.com', icon: '🐦' },
+          { title: 'LinkedIn', url: 'https://linkedin.com', icon: '💼' },
+          { title: 'Reddit', url: 'https://reddit.com', icon: '👽' },
+          { title: 'Discord', url: 'https://discord.com', icon: '💬' }
+        ]
+      },
+      {
+        id: 'productivity',
+        title: 'Productivity',
+        icon: '⚡',
+        links: [
+          { title: 'Gmail', url: 'https://mail.google.com', icon: '📧' },
+          { title: 'Google Drive', url: 'https://drive.google.com', icon: '📁' },
+          { title: 'Notion', url: 'https://notion.so', icon: '📝' },
+          { title: 'Trello', url: 'https://trello.com', icon: '📋' }
+        ]
+      }
+    ];
+
+    let groups = [];
+
+    function loadGroups() {
+      const stored = localStorage.getItem(GROUPS_KEY);
+      groups = stored ? JSON.parse(stored) : defaultGroups;
+      if (!stored) {
+        saveGroups();
+      }
+      renderGroups();
+    }
+
+    function saveGroups() {
+      localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
+    }
+
+    function renderGroups() {
+      groupsGrid.innerHTML = groups.map(group => `
+        <div class="group-card">
+          <div class="group-header">
+            <div class="group-icon">${group.icon}</div>
+            <div class="group-info">
+              <div class="group-title">${escapeHtml(group.title)}</div>
+              <div class="group-count">${group.links.length} links</div>
+            </div>
+          </div>
+          <div class="group-links">
+            ${group.links.map(link => `
+              <a href="${escapeHtml(link.url)}" class="group-link" target="_blank">
+                <span class="group-link-icon">${link.icon}</span>
+                <span class="group-link-text">${escapeHtml(link.title)}</span>
+              </a>
+            `).join('')}
+          </div>
+          <button class="btn open-all-btn" data-group-id="${group.id}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"></path>
+            </svg>
+            Open All Links
+          </button>
+        </div>
+      `).join('');
+
+      // Add event listeners for "Open All" buttons
+      groupsGrid.querySelectorAll('.open-all-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const groupId = e.currentTarget.dataset.groupId;
+          const group = groups.find(g => g.id === groupId);
+          if (group) {
+            group.links.forEach(link => {
+              window.open(link.url, '_blank');
+            });
+          }
+        });
+      });
+    }
+
+    // Initialize
+    loadTodos();
+    loadNotes();
+    loadGroups();
+  </script>
+</body>
+
+</html>

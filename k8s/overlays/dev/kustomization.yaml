@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+patches:
+  - path: patch-configmap.yaml
+  - path: patch-secret.yaml
+  # NodePort = YAML-friendly alternative to kubectl port-forward (see infra/README.md)
+  - path: patch-frontend-nodeport.yaml
+  - path: patch-api-nodeport.yaml
+  - path: patch-ingress.yaml

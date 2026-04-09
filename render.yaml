@@ -1,0 +1,60 @@
+##############################################################################
+# Render Blueprint — homepage-render-deployment
+# Docs: https://render.com/docs/blueprint-spec
+##############################################################################
+
+services:
+  # ---------------------------------------------------------------------------
+  # Go API backend
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: homepage-api           # → https://homepage-api.onrender.com
+    runtime: docker
+    dockerfilePath: infra/docker/server.Dockerfile
+    dockerContext: .             # build context = repo root
+    plan: free
+    healthCheckPath: /api/healthz
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: MONGO_DB
+        value: homepage
+      - key: SESSION_COOKIE
+        value: homepage_session
+      # Set these in the Render dashboard (never commit secrets):
+      - key: MONGO_URI
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      # Must match what you register in Google Cloud Console:
+      # e.g. https://homepage-frontend.onrender.com/auth/google/callback
+      - key: OAUTH_REDIRECT_URL
+        sync: false
+      # Your frontend URL, e.g. https://homepage-frontend.onrender.com
+      - key: FRONTEND_ORIGIN
+        sync: false
+
+  # ---------------------------------------------------------------------------
+  # Angular frontend — served as a static site
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: homepage-frontend      # → https://homepage-frontend.onrender.com
+    runtime: static
+    buildCommand: >-
+      cd homepage && npm ci && npm run build &&
+      if [ -f dist/homepage/browser/index.csr.html ]; then
+        cp dist/homepage/browser/index.csr.html dist/homepage/browser/index.html;
+      fi
+    staticPublishPath: homepage/dist/homepage/browser
+    plan: free
+    # Cross-service proxying (/api/* and /auth/* → backend) is handled by
+    # homepage/public/_redirects using Render's 200-rewrite (proxy) syntax.
+    routes:
+      # Angular SPA fallback — all unmatched paths serve index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html

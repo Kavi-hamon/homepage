@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homepage-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homepage-frontend
+  template:
+    metadata:
+      labels:
+        app: homepage-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: kavihamon/kavi-homepage:homepage-frontend
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: http

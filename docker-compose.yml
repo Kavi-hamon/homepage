@@ -1,0 +1,42 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: homepage-mongo
+    restart: unless-stopped
+    ports:
+      # Use default host port 27017, but you can override to avoid conflicts:
+      # MONGO_HOST_PORT=27018 docker compose up -d
+      - "${MONGO_HOST_PORT:-27017}:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  api:
+    env_file:
+      - ./server/.env
+    image: "kavihamon/kavi-homepage:homepage-api"
+    container_name: homepage-api
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    environment:
+      PORT: "8080"
+      MONGO_URI: "mongodb://mongo:27017"
+      MONGO_DB: "homepage"
+      # Route the OAuth callback back through the frontend origin so cookies are
+      # set on the same host the browser uses (the frontend proxies /auth -> api).
+      OAUTH_REDIRECT_URL: "http://localhost:8080/auth/google/callback"
+      FRONTEND_ORIGIN: "http://localhost:4200"
+    ports:
+      - "8080:8080"
+
+  frontend:
+    image: "kavihamon/kavi-homepage:homepage-frontend"
+    container_name: homepage-frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "4200:80"
+
+volumes:
+  mongo-data:

@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home — Your start page</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --font: 'Outfit', system-ui, sans-serif;
+      --radius: 14px;
+      --radius-sm: 10px;
+      --glass: rgba(255, 255, 255, 0.06);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #6366f1;
+      --accent-dim: rgba(99, 102, 241, 0.25);
+      --danger: #f87171;
+      --success: #34d399;
+      --overlay: 0.46;
+      --blur: 16px;
+    }
+
+    body.theme-ocean {
+      --accent: #06b6d4;
+      --accent-dim: rgba(6, 182, 212, 0.25);
+    }
+    body.theme-forest {
+      --accent: #22c55e;
+      --accent-dim: rgba(34, 197, 94, 0.25);
+    }
+    body.theme-sunset {
+      --accent: #f97316;
+      --accent-dim: rgba(249, 115, 22, 0.25);
+    }
+    body.theme-rose {
+      --accent: #f43f5e;
+      --accent-dim: rgba(244, 63, 94, 0.25);
+    }
+    body.theme-amber {
+      --accent: #eab308;
+      --accent-dim: rgba(234, 179, 8, 0.25);
+    }
+    body.theme-light {
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --glass: rgba(255, 255, 255, 0.72);
+      --glass-border: rgba(15, 23, 42, 0.08);
+      --accent-dim: rgba(99, 102, 241, 0.15);
+    }
+    body.theme-light .wallpaper-overlay {
+      background: rgba(248, 250, 252, var(--overlay));
+    }
+
+    html { font-size: 16px; }
+    body {
+      font-family: var(--font);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wallpaper {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background 0.5s ease;
+    }
+    .wallpaper.gradient-aurora {
+      background: linear-gradient(135deg, #0a0618 0%, #1e1b4b 28%, #4c1d95 52%, #7c3aed 72%, #c4b5fd 100%);
+    }
+    .wallpaper.gradient-deep {
+      background: linear-gradient(160deg, #020617 0%, #0f172a 38%, #1e3a8a 68%, #1d4ed8 100%);
+    }
+    .wallpaper.gradient-dusk {
+      background: linear-gradient(175deg, #431407 0%, #9f1239 38%, #ea580c 72%, #fcd34d 100%);
+    }
+    .wallpaper.gradient-moss {
+      background: linear-gradient(145deg, #022c22 0%, #064e3b 42%, #0d9488 78%, #6ee7b7 100%);
+    }
+    .wallpaper.gradient-sand {
+      background: linear-gradient(155deg, #1c1917 0%, #57534e 40%, #a8a29e 75%, #f5f5f4 100%);
+    }
+    .wallpaper-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background: rgba(15, 23, 42, var(--overlay));
+      pointer-events: none;
+      transition: background 0.3s ease;
+    }
+    .wallpaper-blur {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      pointer-events: none;
+    }
+
+    .app {
+      position: relative;
+      z-index: 3;
+      min-height: 100vh;
+      padding: 20px 24px 48px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    /* Top bar */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+    .tabs-strip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
+      overflow-x: auto;
+      padding: 4px 0;
+      scrollbar-width: none;
+    }
+    .tabs-strip::-webkit-scrollbar { display: none; }
+    .tab-pill {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: var(--glass);
+      border-color: var(--glass-border);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .tab-pill:hover {
+      color: var(--text);
+      border-color: rgba(255,255,255,0.15);
+    }
+    .tab-pill.active {
+      color: var(--text);
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      box-shadow: 0 0 24px var(--accent-dim);
+    }
+    .tab-pill .tab-edit {
+      opacity: 0.5;
+      padding: 2px;
+      border: none;
+      background: none;
+      color: inherit;
+      cursor: pointer;
+      font-size: 0.75rem;
+    }
+    .tab-pill .tab-edit:hover { opacity: 1; }
+    .btn-add-tab {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px dashed var(--glass-border);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-add-tab:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--glass-border);
+      background: var(--glass);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      margin-bottom: 32px;
+      animation: fadeUp 0.6s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .greeting {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .clock {
+      font-size: clamp(2.5rem, 8vw, 4rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--text) 0%, var(--text-muted) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .date-line {
+      margin-top: 8px;
+      font-size: 1rem;
+      color: var(--text-muted);
+    }
+
+    .search-wrap {
+      max-width: 560px;
+      margin: 0 auto 36px;
+      animation: fadeUp 0.6s 0.08s ease both;
+    }
+    .search-box {
+      position: relative;
+    }
+    .search-box svg {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+    #searchInput {
+      width: 100%;
+      padding: 16px 20px 16px 52px;
+      border-radius: var(--radius);
+      border: 1px solid var(--glass-border);
+      background: var(--glass);
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+    #searchInput:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+    #searchInput::placeholder { color: var(--text-muted); }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .section-label button {
+      font-size: 0.7rem;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass);
+      color: var(--accent);
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
+    }
+    .section-label button:hover { background: var(--accent-dim); }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+      gap: 12px;
+      margin-bottom: 36px;
+      animation: fadeUp 0.6s 0.12s ease both;
+    }
+    .quick-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 12px;
+      border-radius: var(--radius);
+      border: 1px solid var(--glass-border);
+      background: var(--glass);
+      text-decoration: none;
+      color: var(--text);
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+    .quick-link:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+    }
+    .quick-link .emoji {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--accent-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+    }
+    .quick-link span:last-child {
+      font-size: 0.8rem;
+      font-weight: 500;
+      text-align: center;
+      line-height: 1.2;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .quick-link .remove-q {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 22px;
+      height: 22px;
+      border: none;
+      border-radius: 6px;
+      background: rgba(0,0,0,0.35);
+      color: #fff;
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .quick-link:hover .remove-q { opacity: 1; }
+    .quick-link .remove-q:hover { background: var(--danger); }
+
+    .groups-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 36px;
+      animation: fadeUp 0.6s 0.16s ease both;
+    }
+    .group-card {
+      border-radius: var(--radius);
+      border: 1px solid var(--glass-border);
+      background: var(--glass);
+      padding: 20px;
+      transition: border-color 0.2s;
+    }
+    .group-card:hover { border-color: rgba(255,255,255,0.14); }
+    .group-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .group-head .ico {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: var(--accent-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+    .group-head h3 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .group-head .meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .group-actions-row {
+      display: flex;
+      gap: 6px;
+      margin-left: auto;
+    }
+    .group-actions-row button {
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--glass-border);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.7rem;
+      font-family: inherit;
+    }
+    .group-actions-row button:hover { color: var(--accent); border-color: var(--accent); }
+    .group-links { display: flex; flex-direction: column; gap: 8px; }
+    .group-links a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--glass-border);
+      background: rgba(0,0,0,0.12);
+      text-decoration: none;
+      color: var(--text);
+      font-size: 0.875rem;
+      transition: all 0.15s;
+    }
+    body.theme-light .group-links a { background: rgba(255,255,255,0.5); }
+    .group-links a:hover {
+      border-color: var(--accent);
+      transform: translateX(4px);
+    }
+    .open-all {
+      margin-top: 12px;
+      width: 100%;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--glass-border);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .open-all:hover { color: var(--accent); border-color: var(--accent); }
+
+    .widgets {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+    .widget {
+      border-radius: var(--radius);
+      border: 1px solid var(--glass-border);
+      background: var(--glass);
+      padding: 20px;
+    }
+    .widget h4 {
+      font-size: 1rem;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .widget h4 button {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--glass-border);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-family: inherit;
+    }
+    .todo-form { display: flex; gap: 8px; margin-bottom: 14px; }
+    .todo-form input {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--glass-border);
+      background: rgba(0,0,0,0.15);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.875rem;
+    }
+    body.theme-light .todo-form input { background: rgba(255,255,255,0.6); }
+    .todo-form input:focus { outline: none; border-color: var(--accent); }
+    .todo-form button {
+      padding: 12px 18px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .todo-form button:hover { filter: brightness(1.08); }
+    .todo-list { max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    .todo-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--glass-border);
+      background: rgba(0,0,0,0.1);
+    }
+    body.theme-light .todo-row { background: rgba(255,255,255,0.4); }
+    .todo-row.done .todo-text { text-decoration: line-through; color: var(--text-muted); }
+    .todo-text { flex: 1; font-size: 0.875rem; }
+    .todo-row button.del {
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 4px;
+    }
+    .todo-row button.del:hover { color: var(--danger); }
+    .notes-area {
+      width: 100%;
+      min-height: 180px;
+      padding: 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--glass-border);
+      background: rgba(0,0,0,0.15);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.875rem;
+      resize: vertical;
+    }
+    body.theme-light .notes-area { background: rgba(255,255,255,0.6); }
+    .notes-area:focus { outline: none; border-color: var(--accent); }
+    .saved-hint { font-size: 0.7rem; color: var(--success); opacity: 0; transition: opacity 0.3s; }
+    .saved-hint.show { opacity: 1; }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s, visibility 0.25s;
+    }
+    .modal-backdrop.open { opacity: 1; visibility: visible; }
+    .modal {
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--glass-border);
+      background: #0f172a;
+      color: #f1f5f9;
+      padding: 24px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+      transform: scale(0.96);
+      transition: transform 0.25s;
+    }
+    .modal-backdrop.open .modal { transform: scale(1); }
+    body.theme-light .modal {
+      background: #f8fafc;
+      color: #0f172a;
+      border-color: #e2e8f0;
+    }
+    .modal h2 {
+      font-size: 1.25rem;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal h2 button {
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .modal-section {
+      margin-bottom: 24px;
+    }
+    .modal-section h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #94a3b8;
+      margin-bottom: 12px;
+    }
+    body.theme-light .modal-section h3 { color: #64748b; }
+    .theme-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .theme-chip {
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 2px solid transparent;
+      background: rgba(255,255,255,0.08);
+      color: inherit;
+      font-family: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    body.theme-light .theme-chip { background: #e2e8f0; }
+    .theme-chip.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+    .wallpaper-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+      gap: 10px;
+    }
+    .wall-opt {
+      aspect-ratio: 16/10;
+      border-radius: var(--radius-sm);
+      border: 2px solid transparent;
+      cursor: pointer;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .wall-opt span {
+      position: absolute;
+      bottom: 6px;
+      left: 8px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-shadow: 0 1px 4px #000;
+      color: #fff;
+    }
+    .wall-opt.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+    .wall-custom {
+      margin-top: 12px;
+    }
+    .wall-custom label { display: block; font-size: 0.8rem; margin-bottom: 6px; color: #94a3b8; }
+    .wall-custom input[type="url"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(0,0,0,0.3);
+      color: inherit;
+      font-family: inherit;
+      margin-bottom: 8px;
+    }
+    body.theme-light .wall-custom input {
+      border-color: #cbd5e1;
+      background: #fff;
+    }
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .slider-row input[type="range"] { flex: 1; }
+    .slider-row span { font-size: 0.8rem; color: #94a3b8; min-width: 36px; }
+    .engine-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .engine-row button {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: inherit;
+      font-family: inherit;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .engine-row button.active { border-color: #6366f1; background: rgba(99,102,241,0.2); }
+    .data-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+    .data-btns button {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: transparent;
+      color: inherit;
+      font-family: inherit;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .data-btns button.danger { color: #f87171; border-color: rgba(248,113,113,0.4); }
+
+    /* Editor modal (wider) */
+    .modal.wide { max-width: 520px; }
+    .form-row { margin-bottom: 12px; }
+    .form-row label { display: block; font-size: 0.8rem; margin-bottom: 6px; color: #94a3b8; }
+    .form-row input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.25);
+      color: inherit;
+      font-family: inherit;
+    }
+    body.theme-light .form-row input { background: #fff; border-color: #e2e8f0; }
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    body.theme-light .modal-footer { border-color: #e2e8f0; }
+    .modal-footer button {
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+    .modal-footer .cancel {
+      background: rgba(255,255,255,0.08);
+      color: inherit;
+    }
+    .modal-footer .primary { background: #6366f1; color: #fff; }
+
+    .empty-tab {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-muted);
+    }
+    .empty-tab p { margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <div
+    class="wallpaper"
+    id="wallpaperEl"
+    style="background-image:url(https://picsum.photos/id/1015/1920/1080);background-size:cover;background-position:center"
+    aria-hidden="true"
+  ></div>
+  <div class="wallpaper-overlay" id="wallOverlay"></div>
+  <div class="wallpaper-blur" id="wallBlur"></div>
+
+  <div class="app">
+    <div class="top-bar">
+      <div class="tabs-strip" id="tabsStrip"></div>
+      <button type="button" class="btn-add-tab" id="addTabBtn" title="New tab">+</button>
+      <div class="top-actions">
+        <button type="button" class="icon-btn" id="openSettings" title="Settings" aria-label="Settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="tabContent"></div>
+  </div>
+
+  <!-- Settings modal -->
+  <div class="modal-backdrop" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal">
+      <h2 id="settingsTitle">Settings <button type="button" id="closeSettings" aria-label="Close">×</button></h2>
+
+      <div class="modal-section">
+        <h3>Theme</h3>
+        <div class="theme-chips" id="themeChips"></div>
+      </div>
+
+      <div class="modal-section">
+        <h3>Wallpaper</h3>
+        <div class="wallpaper-options" id="wallpaperPresets"></div>
+        <div class="wall-custom">
+          <label>Custom image URL</label>
+          <input type="url" id="customWallUrl" placeholder="https://..." />
+          <button type="button" class="theme-chip" id="applyCustomWall" style="margin-top:8px;">Apply URL</button>
+        </div>
+        <div class="slider-row">
+          <span>Dim</span>
+          <input type="range" id="overlayRange" min="0.3" max="0.92" step="0.02" />
+          <span id="overlayVal">65%</span>
+        </div>
+        <div class="slider-row">
+          <span>Blur</span>
+          <input type="range" id="blurRange" min="0" max="28" step="1" />
+          <span id="blurVal">16px</span>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <h3>Search engine</h3>
+        <div class="engine-row" id="engineRow"></div>
+      </div>
+
+      <div class="modal-section">
+        <h3>Display</h3>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.9rem;">
+          <input type="checkbox" id="showClock" /> Show clock & greeting
+        </label>
+        <div class="form-row" style="margin-top:12px;">
+          <label>Your name (greeting)</label>
+          <input type="text" id="userName" placeholder="there" />
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <h3>Data</h3>
+        <div class="data-btns">
+          <button type="button" id="exportData">Export backup</button>
+          <button type="button" id="importData">Import backup</button>
+          <input type="file" id="importFile" accept=".json,application/json" hidden />
+          <button type="button" class="danger" id="resetAll">Reset everything</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab rename -->
+  <div class="modal-backdrop" id="tabEditModal">
+    <div class="modal wide">
+      <h2>Edit tab <button type="button" id="closeTabEdit">×</button></h2>
+      <div class="form-row">
+        <label>Tab name</label>
+        <input type="text" id="tabNameInput" maxlength="40" />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="cancel" id="cancelTabEdit">Cancel</button>
+        <button type="button" class="danger" id="deleteTabBtn" style="margin-right:auto;">Delete tab</button>
+        <button type="button" class="primary" id="saveTabName">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add quick link -->
+  <div class="modal-backdrop" id="quickModal">
+    <div class="modal wide">
+      <h2>Add quick link <button type="button" id="closeQuick">×</button></h2>
+      <div class="form-row">
+        <label>Title</label>
+        <input type="text" id="quickTitle" placeholder="YouTube" />
+      </div>
+      <div class="form-row">
+        <label>URL</label>
+        <input type="url" id="quickUrl" placeholder="https://youtube.com" />
+      </div>
+      <div class="form-row">
+        <label>Emoji / icon</label>
+        <input type="text" id="quickEmoji" placeholder="▶️" maxlength="4" />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="cancel" id="cancelQuick">Cancel</button>
+        <button type="button" class="primary" id="saveQuick">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add / edit group -->
+  <div class="modal-backdrop" id="groupModal">
+    <div class="modal wide">
+      <h2 id="groupModalTitle">New group <button type="button" id="closeGroup">×</button></h2>
+      <div class="form-row">
+        <label>Group name</label>
+        <input type="text" id="groupTitle" placeholder="Dev tools" />
+      </div>
+      <div class="form-row">
+        <label>Group emoji</label>
+        <input type="text" id="groupEmoji" placeholder="💻" maxlength="4" />
+      </div>
+      <p style="font-size:0.8rem;color:#94a3b8;margin-bottom:12px;">Add links after creating the group from the card.</p>
+      <div class="modal-footer">
+        <button type="button" class="cancel" id="cancelGroup">Cancel</button>
+        <button type="button" class="primary" id="saveGroup">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+(function () {
+  const STORAGE_KEY = 'homehub_v1';
+  const defaultTab = () => ({
+    id: 't_' + Math.random().toString(36).slice(2, 11),
+    name: 'Home',
+    quickLinks: [
+      { title: 'GitHub', url: 'https://github.com', emoji: '🐙' },
+      { title: 'Gmail', url: 'https://mail.google.com', emoji: '📧' },
+      { title: 'YouTube', url: 'https://youtube.com', emoji: '▶️' },
+    ],
+    groups: [
+      {
+        id: 'g1',
+        title: 'Dev',
+        emoji: '💻',
+        links: [
+          { title: 'MDN', url: 'https://developer.mozilla.org', emoji: '📖' },
+          { title: 'Stack Overflow', url: 'https://stackoverflow.com', emoji: '📚' },
+        ],
+      },
+    ],
+  });
+
+  const defaultState = () => ({
+    activeTabId: null,
+    tabs: [defaultTab()],
+    settings: {
+      theme: 'default',
+      wallpaper: 'wallpaper-lakeside',
+      customWallUrl: '',
+      overlay: 0.46,
+      blur: 16,
+      searchEngine: 'google',
+      showClock: true,
+      userName: '',
+    },
+    todos: [],
+    notes: '',
+  });
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return defaultState();
+      const d = JSON.parse(raw);
+      if (!d.tabs || !d.tabs.length) d.tabs = [defaultTab()];
+      if (!d.settings) d.settings = defaultState().settings;
+      if (typeof d.todos === 'undefined') d.todos = [];
+      if (typeof d.notes === 'undefined') d.notes = '';
+      return d;
+    } catch (e) {
+      return defaultState();
+    }
+  }
+
+  let state = load();
+  if (!state.activeTabId) state.activeTabId = state.tabs[0].id;
+  if (!state.tabs.find(t => t.id === state.activeTabId)) state.activeTabId = state.tabs[0].id;
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function getActiveTab() {
+    return state.tabs.find(t => t.id === state.activeTabId) || state.tabs[0];
+  }
+
+  const wallpaperEl = document.getElementById('wallpaperEl');
+  const wallOverlay = document.getElementById('wallOverlay');
+  const wallBlur = document.getElementById('wallBlur');
+  const tabsStrip = document.getElementById('tabsStrip');
+  const tabContent = document.getElementById('tabContent');
+
+  const WALL_PRESETS = [
+    { id: 'gradient-aurora', label: 'Aurora', class: 'gradient-aurora' },
+    { id: 'gradient-deep', label: 'Deep', class: 'gradient-deep' },
+    { id: 'gradient-dusk', label: 'Dusk', class: 'gradient-dusk' },
+    { id: 'gradient-moss', label: 'Moss', class: 'gradient-moss' },
+    { id: 'gradient-sand', label: 'Sand', class: 'gradient-sand' },
+    { id: 'wallpaper-lakeside', label: 'Lakeside', url: 'https://picsum.photos/id/1015/1920/1080' },
+    { id: 'unsplash-mountains', label: 'Peaks', url: 'https://picsum.photos/id/1018/1920/1080' },
+    { id: 'photo-canyon', label: 'Canyon', url: 'https://picsum.photos/id/1043/1920/1080' },
+    { id: 'unsplash-ocean', label: 'Coast', url: 'https://picsum.photos/id/1050/1920/1080' },
+    { id: 'photo-waves', label: 'Waves', url: 'https://picsum.photos/id/1036/1920/1080' },
+    { id: 'unsplash-city', label: 'Skyline', url: 'https://picsum.photos/id/1067/1920/1080' },
+    { id: 'photo-forest', label: 'Forest', url: 'https://picsum.photos/id/1025/1920/1080' },
+    { id: 'photo-golden', label: 'Golden', url: 'https://picsum.photos/id/1011/1920/1080' },
+    { id: 'photo-mist', label: 'Mist', url: 'https://picsum.photos/id/1060/1920/1080' },
+  ];
+
+  const THEMES = [
+    { id: 'default', label: 'Indigo' },
+    { id: 'ocean', label: 'Ocean', body: 'theme-ocean' },
+    { id: 'forest', label: 'Forest', body: 'theme-forest' },
+    { id: 'sunset', label: 'Sunset', body: 'theme-sunset' },
+    { id: 'rose', label: 'Rose', body: 'theme-rose' },
+    { id: 'amber', label: 'Amber', body: 'theme-amber' },
+    { id: 'light', label: 'Light', body: 'theme-light' },
+  ];
+
+  const ENGINES = {
+    google: (q) => 'https://www.google.com/search?q=' + encodeURIComponent(q),
+    duckduckgo: (q) => 'https://duckduckgo.com/?q=' + encodeURIComponent(q),
+    bing: (q) => 'https://www.bing.com/search?q=' + encodeURIComponent(q),
+  };
+
+  function applySettings() {
+    const s = state.settings;
+    document.body.className = '';
+    const th = THEMES.find(t => t.id === s.theme) || THEMES[0];
+    if (th.body) document.body.classList.add(th.body);
+
+    wallpaperEl.className = 'wallpaper';
+    const preset = WALL_PRESETS.find(p => p.id === s.wallpaper);
+    if (s.wallpaper === 'custom' && s.customWallUrl) {
+      wallpaperEl.style.backgroundImage = 'url("' + String(s.customWallUrl).replace(/"/g, '\\"') + '")';
+      wallpaperEl.style.backgroundSize = 'cover';
+    } else if (preset && preset.url) {
+      wallpaperEl.style.backgroundImage = 'url("' + preset.url.replace(/"/g, '\\"') + '")';
+      wallpaperEl.style.backgroundSize = 'cover';
+    } else if (preset && preset.class) {
+      wallpaperEl.classList.add(preset.class);
+      wallpaperEl.style.backgroundImage = '';
+    } else {
+      wallpaperEl.classList.add('gradient-aurora');
+      wallpaperEl.style.backgroundImage = '';
+    }
+
+    document.documentElement.style.setProperty('--overlay', String(s.overlay));
+    wallOverlay.style.background = document.body.classList.contains('theme-light')
+      ? 'rgba(248, 250, 252, ' + s.overlay + ')'
+      : 'rgba(15, 23, 42, ' + s.overlay + ')';
+    document.documentElement.style.setProperty('--blur', s.blur + 'px');
+  }
+
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function renderTabs() {
+    tabsStrip.innerHTML = state.tabs.map(tab => `
+      <button type="button" class="tab-pill ${tab.id === state.activeTabId ? 'active' : ''}" data-id="${tab.id}">
+        ${escapeHtml(tab.name)}
+        <span class="tab-edit" data-edit="${tab.id}" title="Edit tab">✎</span>
+      </button>
+    `).join('');
+
+    tabsStrip.querySelectorAll('.tab-pill').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        if (e.target.closest('.tab-edit')) return;
+        state.activeTabId = btn.dataset.id;
+        save();
+        renderTabs();
+        renderTabContent();
+      });
+    });
+    tabsStrip.querySelectorAll('.tab-edit').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openTabEdit(el.dataset.edit);
+      });
+    });
+  }
+
+  let editingTabId = null;
+  let editingGroupId = null;
+  let groupModalMode = 'new';
+
+  function renderTabContent() {
+    const tab = getActiveTab();
+    const s = state.settings;
+
+    let hero = '';
+    if (s.showClock) {
+      const now = new Date();
+      const h = now.getHours();
+      let greet = 'Good evening';
+      if (h < 12) greet = 'Good morning';
+      else if (h < 17) greet = 'Good afternoon';
+      const name = (s.userName || '').trim();
+      const greetLine = name ? greet + ', ' + escapeHtml(name) : greet;
+      const time = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
+      const date = now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+      hero = `
+        <div class="hero">
+          <div class="greeting" id="greetLine">${greetLine}</div>
+          <div class="clock" id="clockEl">${time}</div>
+          <div class="date-line" id="dateEl">${escapeHtml(date)}</div>
+        </div>`;
+    }
+
+    const quick = tab.quickLinks.map((l, i) => `
+      <a href="${escapeHtml(l.url)}" class="quick-link" target="_blank" rel="noopener">
+        <button type="button" class="remove-q" data-q="${i}" title="Remove">×</button>
+        <div class="emoji">${l.emoji || '🔗'}</div>
+        <span>${escapeHtml(l.title)}</span>
+      </a>
+    `).join('');
+
+    const groups = tab.groups.map(g => `
+      <div class="group-card" data-gid="${g.id}">
+        <div class="group-head">
+          <div class="ico">${g.emoji || '📁'}</div>
+          <div>
+            <h3>${escapeHtml(g.title)}</h3>
+            <div class="meta">${g.links.length} links</div>
+          </div>
+          <div class="group-actions-row">
+            <button type="button" data-addlink="${g.id}">+ Link</button>
+            <button type="button" data-editg="${g.id}">Edit</button>
+            <button type="button" data-delg="${g.id}">Remove</button>
+          </div>
+        </div>
+        <div class="group-links">
+          ${g.links.map((link, li) => `
+            <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener">
+              <span>${link.emoji || '🔗'}</span>
+              <span>${escapeHtml(link.title)}</span>
+            </a>
+          `).join('')}
+        </div>
+        <button type="button" class="open-all" data-openall="${g.id}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+          Open all
+        </button>
+      </div>
+    `).join('');
+
+    const todosHtml = state.todos.map((t, i) => `
+      <div class="todo-row ${t.done ? 'done' : ''}" data-ti="${i}">
+        <input type="checkbox" ${t.done ? 'checked' : ''} data-tcheck="${i}" />
+        <span class="todo-text">${escapeHtml(t.text)}</span>
+        <button type="button" class="del" data-tdel="${i}">×</button>
+      </div>
+    `).join('');
+
+    tabContent.innerHTML = hero + `
+      <div class="search-wrap">
+        <div class="search-box">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="searchInput" placeholder="Search the web…" autocomplete="off" />
+        </div>
+      </div>
+      <section>
+        <div class="section-label">
+          <span>Quick links</span>
+          <button type="button" id="addQuickBtn">+ Add</button>
+        </div>
+        <div class="quick-grid" id="quickGrid">${quick || '<p class="empty-tab" style="grid-column:1/-1;">No quick links. Add some!</p>'}</div>
+      </section>
+      <section>
+        <div class="section-label">
+          <span>Link groups</span>
+          <button type="button" id="addGroupBtn">+ New group</button>
+        </div>
+        <div class="groups-grid">${groups || '<p class="empty-tab" style="grid-column:1/-1;">No groups yet.</p>'}</div>
+      </section>
+      <section>
+        <div class="section-label"><span>Widgets</span></div>
+        <div class="widgets">
+          <div class="widget">
+            <h4>Todos <button type="button" id="clearTodos">Clear</button></h4>
+            <form class="todo-form" id="todoForm">
+              <input type="text" id="todoInput" placeholder="Add task…" />
+              <button type="submit">Add</button>
+            </form>
+            <div class="todo-list" id="todoList">${todosHtml || '<div class="empty-tab" style="padding:20px;">No tasks</div>'}</div>
+          </div>
+          <div class="widget">
+            <h4>Notes <span class="saved-hint" id="notesSaved">Saved</span></h4>
+            <textarea class="notes-area" id="notesArea" placeholder="Quick notes…"></textarea>
+          </div>
+        </div>
+      </section>
+    `;
+
+    document.getElementById('notesArea').value = state.notes || '';
+    bindTabContentEvents();
+    if (s.showClock) {
+      window._clockInt = setInterval(() => {
+        const el = document.getElementById('clockEl');
+        const de = document.getElementById('dateEl');
+        if (!el) return;
+        const n = new Date();
+        el.textContent = n.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
+        if (de) de.textContent = n.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+      }, 1000);
+    }
+  }
+
+  let notesTimer;
+  function bindTabContentEvents() {
+    if (window._clockInt) { clearInterval(window._clockInt); window._clockInt = null; }
+
+    document.getElementById('searchInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const q = e.target.value.trim();
+        if (q) window.location.href = ENGINES[state.settings.searchEngine](q);
+      }
+    });
+
+    document.getElementById('quickGrid').querySelectorAll('.remove-q').forEach(b => {
+      b.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const tab = getActiveTab();
+        tab.quickLinks.splice(parseInt(b.dataset.q, 10), 1);
+        save();
+        renderTabContent();
+      });
+    });
+
+    document.getElementById('addQuickBtn').addEventListener('click', () => {
+      document.getElementById('quickTitle').value = '';
+      document.getElementById('quickUrl').value = '';
+      document.getElementById('quickEmoji').value = '🔗';
+      document.getElementById('quickModal').classList.add('open');
+    });
+
+    document.getElementById('addGroupBtn').addEventListener('click', () => {
+      groupModalMode = 'new';
+      editingGroupId = null;
+      document.getElementById('groupModalTitle').textContent = 'New group';
+      document.getElementById('groupTitle').value = '';
+      document.getElementById('groupEmoji').value = '📁';
+      document.getElementById('groupModal').classList.add('open');
+    });
+
+    tabContent.querySelectorAll('[data-addlink]').forEach(b => {
+      b.addEventListener('click', () => {
+        const gid = b.dataset.addlink;
+        const title = prompt('Link title');
+        if (!title) return;
+        const url = prompt('URL (https://...)');
+        if (!url) return;
+        const emoji = prompt('Emoji (optional)', '🔗') || '🔗';
+        const tab = getActiveTab();
+        const g = tab.groups.find(x => x.id === gid);
+        if (g) {
+          g.links.push({ title: title.trim(), url: url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim(), emoji });
+          save();
+          renderTabContent();
+        }
+      });
+    });
+
+    tabContent.querySelectorAll('[data-editg]').forEach(b => {
+      b.addEventListener('click', () => {
+        const gid = b.dataset.editg;
+        const tab = getActiveTab();
+        const g = tab.groups.find(x => x.id === gid);
+        if (!g) return;
+        const title = prompt('Group name', g.title);
+        if (title === null) return;
+        const emoji = prompt('Emoji', g.emoji || '📁');
+        if (emoji !== null) g.emoji = emoji;
+        g.title = title.trim() || g.title;
+        save();
+        renderTabContent();
+      });
+    });
+
+    tabContent.querySelectorAll('[data-delg]').forEach(b => {
+      b.addEventListener('click', () => {
+        if (!confirm('Delete this group and all its links?')) return;
+        const tab = getActiveTab();
+        tab.groups = tab.groups.filter(x => x.id !== b.dataset.delg);
+        save();
+        renderTabContent();
+      });
+    });
+
+    tabContent.querySelectorAll('[data-openall]').forEach(b => {
+      b.addEventListener('click', () => {
+        const tab = getActiveTab();
+        const g = tab.groups.find(x => x.id === b.dataset.openall);
+        if (g) g.links.forEach(l => window.open(l.url, '_blank'));
+      });
+    });
+
+    document.getElementById('todoForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const inp = document.getElementById('todoInput');
+      const text = inp.value.trim();
+      if (!text) return;
+      state.todos.unshift({ text, done: false });
+      inp.value = '';
+      save();
+      renderTabContent();
+    });
+
+    document.getElementById('todoList').querySelectorAll('[data-tcheck]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const i = parseInt(cb.dataset.tcheck, 10);
+        state.todos[i].done = cb.checked;
+        save();
+        renderTabContent();
+      });
+    });
+    document.getElementById('todoList').querySelectorAll('[data-tdel]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.todos.splice(parseInt(btn.dataset.tdel, 10), 1);
+        save();
+        renderTabContent();
+      });
+    });
+    document.getElementById('clearTodos').addEventListener('click', () => {
+      if (confirm('Clear all todos?')) { state.todos = []; save(); renderTabContent(); }
+    });
+
+    const notesArea = document.getElementById('notesArea');
+    notesArea.addEventListener('input', () => {
+      state.notes = notesArea.value;
+      clearTimeout(notesTimer);
+      notesTimer = setTimeout(() => {
+        save();
+        const hint = document.getElementById('notesSaved');
+        hint.classList.add('show');
+        setTimeout(() => hint.classList.remove('show'), 1500);
+      }, 400);
+    });
+  }
+
+  function openTabEdit(tabId) {
+    editingTabId = tabId;
+    const tab = state.tabs.find(t => t.id === tabId);
+    document.getElementById('tabNameInput').value = tab ? tab.name : '';
+    document.getElementById('tabEditModal').classList.add('open');
+  }
+
+  document.getElementById('addTabBtn').addEventListener('click', () => {
+    const name = prompt('New tab name', 'Work');
+    if (!name || !name.trim()) return;
+    const t = defaultTab();
+    t.name = name.trim();
+    t.quickLinks = [];
+    t.groups = [];
+    state.tabs.push(t);
+    state.activeTabId = t.id;
+    save();
+    renderTabs();
+    renderTabContent();
+  });
+
+  document.getElementById('saveTabName').addEventListener('click', () => {
+    const tab = state.tabs.find(t => t.id === editingTabId);
+    if (tab) {
+      tab.name = document.getElementById('tabNameInput').value.trim() || tab.name;
+      save();
+    }
+    document.getElementById('tabEditModal').classList.remove('open');
+    renderTabs();
+  });
+  document.getElementById('deleteTabBtn').addEventListener('click', () => {
+    if (state.tabs.length <= 1) { alert('Keep at least one tab.'); return; }
+    if (!confirm('Delete this tab?')) return;
+    state.tabs = state.tabs.filter(t => t.id !== editingTabId);
+    state.activeTabId = state.tabs[0].id;
+    document.getElementById('tabEditModal').classList.remove('open');
+    save();
+    renderTabs();
+    renderTabContent();
+  });
+  document.getElementById('closeTabEdit').addEventListener('click', () => document.getElementById('tabEditModal').classList.remove('open'));
+  document.getElementById('cancelTabEdit').addEventListener('click', () => document.getElementById('tabEditModal').classList.remove('open'));
+
+  document.getElementById('saveQuick').addEventListener('click', () => {
+    const title = document.getElementById('quickTitle').value.trim();
+    let url = document.getElementById('quickUrl').value.trim();
+    const emoji = document.getElementById('quickEmoji').value.trim() || '🔗';
+    if (!title || !url) return;
+    if (!url.startsWith('http')) url = 'https://' + url;
+    getActiveTab().quickLinks.push({ title, url, emoji });
+    save();
+    document.getElementById('quickModal').classList.remove('open');
+    renderTabContent();
+  });
+  document.getElementById('closeQuick').addEventListener('click', () => document.getElementById('quickModal').classList.remove('open'));
+  document.getElementById('cancelQuick').addEventListener('click', () => document.getElementById('quickModal').classList.remove('open'));
+
+  document.getElementById('saveGroup').addEventListener('click', () => {
+    const title = document.getElementById('groupTitle').value.trim();
+    const emoji = document.getElementById('groupEmoji').value.trim() || '📁';
+    if (!title) return;
+    const tab = getActiveTab();
+    if (groupModalMode === 'new') {
+      tab.groups.push({ id: 'g_' + Math.random().toString(36).slice(2, 9), title, emoji, links: [] });
+    }
+    save();
+    document.getElementById('groupModal').classList.remove('open');
+    renderTabContent();
+  });
+  document.getElementById('closeGroup').addEventListener('click', () => document.getElementById('groupModal').classList.remove('open'));
+  document.getElementById('cancelGroup').addEventListener('click', () => document.getElementById('groupModal').classList.remove('open'));
+
+  /* Settings UI */
+  function openSettingsModal() {
+    const s = state.settings;
+    document.getElementById('customWallUrl').value = s.customWallUrl || '';
+    document.getElementById('overlayRange').value = s.overlay;
+    document.getElementById('blurRange').value = s.blur;
+    document.getElementById('overlayVal').textContent = Math.round(s.overlay * 100) + '%';
+    document.getElementById('blurVal').textContent = s.blur + 'px';
+    document.getElementById('showClock').checked = s.showClock;
+    document.getElementById('userName').value = s.userName || '';
+    document.getElementById('settingsModal').classList.add('open');
+    renderSettingsChips();
+  }
+
+  function renderSettingsChips() {
+    const s = state.settings;
+    document.getElementById('themeChips').innerHTML = THEMES.map(t =>
+      `<button type="button" class="theme-chip ${t.id === s.theme ? 'active' : ''}" data-theme="${t.id}">${t.label}</button>`
+    ).join('');
+    document.getElementById('themeChips').querySelectorAll('[data-theme]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.settings.theme = btn.dataset.theme;
+        save();
+        applySettings();
+        renderSettingsChips();
+      });
+    });
+
+    const grad = {
+      'gradient-aurora': 'linear-gradient(135deg,#0a0618 0%,#1e1b4b 28%,#4c1d95 52%,#7c3aed 72%,#c4b5fd 100%)',
+      'gradient-deep': 'linear-gradient(160deg,#020617 0%,#0f172a 38%,#1e3a8a 68%,#1d4ed8 100%)',
+      'gradient-dusk': 'linear-gradient(175deg,#431407 0%,#9f1239 38%,#ea580c 72%,#fcd34d 100%)',
+      'gradient-moss': 'linear-gradient(145deg,#022c22 0%,#064e3b 42%,#0d9488 78%,#6ee7b7 100%)',
+      'gradient-sand': 'linear-gradient(155deg,#1c1917 0%,#57534e 40%,#a8a29e 75%,#f5f5f4 100%)',
+    };
+    document.getElementById('wallpaperPresets').innerHTML = WALL_PRESETS.map(p => {
+      const active = state.settings.wallpaper === p.id;
+      let style = p.url ? 'background-image:url(' + p.url + ');background-size:cover;background-position:center;' : 'background:' + (grad[p.id] || '#1e293b') + ';';
+      return `<button type="button" class="wall-opt ${active ? 'active' : ''}" data-wall="${p.id}" style="${style}"><span>${p.label}</span></button>`;
+    }).join('') + `<button type="button" class="wall-opt ${state.settings.wallpaper === 'custom' ? 'active' : ''}" data-wall="custom" style="background:linear-gradient(45deg,#334155,#475569);"><span>Custom URL</span></button>`;
+
+    document.getElementById('wallpaperPresets').querySelectorAll('[data-wall]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.settings.wallpaper = btn.dataset.wall;
+        if (state.settings.wallpaper === 'custom' && state.settings.customWallUrl) { /* ok */ }
+        save();
+        applySettings();
+        renderSettingsChips();
+      });
+    });
+
+    document.getElementById('engineRow').innerHTML = Object.keys(ENGINES).map(k =>
+      `<button type="button" class="${state.settings.searchEngine === k ? 'active' : ''}" data-engine="${k}">${k[0].toUpperCase() + k.slice(1)}</button>`
+    ).join('');
+    document.getElementById('engineRow').querySelectorAll('[data-engine]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.settings.searchEngine = btn.dataset.engine;
+        save();
+        renderSettingsChips();
+      });
+    });
+  }
+
+  document.getElementById('openSettings').addEventListener('click', openSettingsModal);
+  document.getElementById('closeSettings').addEventListener('click', () => document.getElementById('settingsModal').classList.remove('open'));
+  document.getElementById('settingsModal').addEventListener('click', (e) => {
+    if (e.target.id === 'settingsModal') document.getElementById('settingsModal').classList.remove('open');
+  });
+
+  document.getElementById('applyCustomWall').addEventListener('click', () => {
+    state.settings.customWallUrl = document.getElementById('customWallUrl').value.trim();
+    state.settings.wallpaper = 'custom';
+    save();
+    applySettings();
+    renderSettingsChips();
+  });
+
+  document.getElementById('overlayRange').addEventListener('input', (e) => {
+    state.settings.overlay = parseFloat(e.target.value);
+    document.getElementById('overlayVal').textContent = Math.round(state.settings.overlay * 100) + '%';
+    save();
+    applySettings();
+  });
+  document.getElementById('blurRange').addEventListener('input', (e) => {
+    state.settings.blur = parseInt(e.target.value, 10);
+    document.getElementById('blurVal').textContent = state.settings.blur + 'px';
+    save();
+    applySettings();
+  });
+
+  document.getElementById('showClock').addEventListener('change', (e) => {
+    state.settings.showClock = e.target.checked;
+    save();
+    renderTabContent();
+  });
+  document.getElementById('userName').addEventListener('change', (e) => {
+    state.settings.userName = e.target.value;
+    save();
+  });
+
+  document.getElementById('exportData').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'homehub-backup.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  document.getElementById('importData').addEventListener('click', () => document.getElementById('importFile').click());
+  document.getElementById('importFile').addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const d = JSON.parse(r.result);
+        if (d.tabs && d.settings) {
+          state = d;
+          if (!state.activeTabId && state.tabs[0]) state.activeTabId = state.tabs[0].id;
+          save();
+          applySettings();
+          renderTabs();
+          renderTabContent();
+          document.getElementById('settingsModal').classList.remove('open');
+          alert('Imported successfully.');
+        } else alert('Invalid backup file.');
+      } catch (err) { alert('Could not read file.'); }
+      e.target.value = '';
+    };
+    r.readAsText(f);
+  });
+  document.getElementById('resetAll').addEventListener('click', () => {
+    if (!confirm('Erase all tabs, settings, todos, and notes?')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    state = defaultState();
+    state.activeTabId = state.tabs[0].id;
+    save();
+    applySettings();
+    renderTabs();
+    renderTabContent();
+    document.getElementById('settingsModal').classList.remove('open');
+  });
+
+  applySettings();
+  renderTabs();
+  renderTabContent();
+})();
+  </script>
+</body>
+</html>

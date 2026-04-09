@@ -1,0 +1,14 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/server.Dockerfile
+    # Tag the locally-built image so it’s easy to push later.
+    image: "homepage-api:v1"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: infra/docker/frontend.Dockerfile
+    image: "homepage-frontend:v1"
+

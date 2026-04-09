@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+patches:
+  - path: patch-configmap.yaml
+  - path: patch-secret.yaml
+  - path: patch-mongo-storage.yaml
+  - path: patch-resources.yaml
+  - path: patch-frontend-nodeport.yaml
+  - path: patch-api-nodeport.yaml
+  # No ingress/cert-manager needed for free-tier MVP
+  - target:
+      kind: Ingress
+      name: homepage
+    patch: |
+      $patch: delete
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: homepage

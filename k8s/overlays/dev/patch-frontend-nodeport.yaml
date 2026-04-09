@@ -1,0 +1,15 @@
+
+# Exposes the Angular UI on a fixed node port (minikube / any cluster node IP).
+# Open: http://$(minikube ip):30420
+# Note: kubectl port-forward cannot be declared in YAML; NodePort is the cluster-native equivalent.
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      nodePort: 30420

@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WebChrome — Modern Grid</title>
+  <style>
+    :root {
+      --bg-overlay: rgba(15, 23, 36, 0.7);
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --text-color: #f1f5f9;
+      --accent: #3b82f6;
+      --muted: #94a3b8;
+      --radius: 16px;
+      --gap: 20px;
+      font-family: 'Poppins', 'Inter', system-ui, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 32px;
+      background: linear-gradient(var(--bg-overlay), var(--bg-overlay)), url('https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+      color: var(--text-color);
+      backdrop-filter: blur(6px);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, var(--accent), #22d3ee);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      margin: 0;
+    }
+
+    p.lead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .btn {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 8px 14px;
+      border-radius: var(--radius);
+      color: var(--text-color);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(4px);
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+
+    .grid {
+      display: grid;
+      gap: var(--gap);
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+    }
+
+    .meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .meta .title {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .meta .sub {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    iframe {
+      border: none;
+      flex: 1;
+      min-height: 200px;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+
+    .todo {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      height: 100%;
+    }
+
+    .todo form {
+      display: flex;
+      gap: 8px;
+    }
+
+    .todo input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-color);
+      outline: none;
+    }
+
+    .todo .list {
+      flex: 1;
+      overflow: auto;
+      max-height: 200px;
+    }
+
+    .todo .task {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      margin-bottom: 8px;
+    }
+
+    .todo .task.done .txt {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    footer {
+      margin-top: 32px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <section class="grid">
+      <article class="card" data-src="https://example.com">
+        <div class="meta">
+          <div>
+            <div class="title">Example</div>
+            <div class="sub">example.com</div>
+          </div>
+        </div>
+        <iframe src="https://example.com"></iframe>
+        <div class="meta">
+          <div>
+            <div class="title">Example</div>
+            <div class="sub">example.com</div>
+          </div>
+        </div>
+        <iframe src="https://example.com"></iframe>
+        <div class="meta">
+          <div>
+            <div class="title">Example</div>
+            <div class="sub">example.com</div>
+          </div>
+        </div>
+        <iframe src="https://example.com"></iframe>
+      </article>
+
+      <article class="card" data-src="https://news.ycombinator.com">
+        <div class="meta">
+          <div>
+            <div class="title">Hacker News</div>
+            <div class="sub">news.ycombinator.com</div>
+          </div>
+        </div>
+        <iframe src="https://news.ycombinator.com"></iframe>
+      </article>
+
+      <article class="card" data-src="https://github.com">
+        <div class="meta">
+          <div>
+            <div class="title">GitHub</div>
+            <div class="sub">github.com</div>
+          </div>
+        </div>
+        <iframe src="https://github.com"></iframe>
+      </article>
+    </section>
+
+    <section class="grid">
+      <article class="card" data-src="https://stackoverflow.com">
+        <div class="meta">
+          <div>
+            <div class="title">Stack Overflow</div>
+            <div class="sub">stackoverflow.com</div>
+          </div>
+        </div>
+        <iframe src="https://stackoverflow.com"></iframe>
+      </article>
+
+      <article class="card" data-src="https://wikipedia.org">
+        <div class="meta">
+          <div>
+            <div class="title">Wikipedia</div>
+            <div class="sub">wikipedia.org</div>
+          </div>
+        </div>
+        <iframe src="https://wikipedia.org"></iframe>
+      </article>
+
+      <article class="card" id="todoCard">
+        <div class="meta">
+          <div>
+            <div class="title">Todo</div>
+            <div class="sub">Your daily tasks</div>
+          </div>
+        </div>
+        <div class="todo">
+          <form id="todoForm"><input id="todoInput" type="text" placeholder="Add a task..."><button class="btn"
+              type="submit">Add</button></form>
+          <div class="list" id="todoList"></div>
+        </div>
+      </article>
+
+    </section>
+    <div class="controls">
+      <button class="btn" id="resetTodo">Clear Todo</button>
+    </div>
+  </main>
+
+  <script>
+    const TODO_KEY = 'webchrome_todos_v2';
+    const form = document.getElementById('todoForm');
+    const input = document.getElementById('todoInput');
+    const listEl = document.getElementById('todoList');
+
+    function loadTodos() {
+      try { const raw = localStorage.getItem(TODO_KEY); return raw ? JSON.parse(raw) : []; } catch (e) { return [] }
+    }
+    function saveTodos(t) { localStorage.setItem(TODO_KEY, JSON.stringify(t)) }
+
+    let todos = loadTodos();
+
+    function render() {
+      listEl.innerHTML = '';
+      if (todos.length === 0) { listEl.innerHTML = '<div class="small">No tasks yet.</div>'; return }
+      todos.forEach((t, i) => {
+        const row = document.createElement('div'); row.className = 'task' + (t.done ? ' done' : '');
+        const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = !!t.done;
+        checkbox.addEventListener('change', () => { todos[i].done = checkbox.checked; saveTodos(todos); render(); });
+        const txt = document.createElement('div'); txt.className = 'txt'; txt.textContent = t.text;
+        const del = document.createElement('button'); del.className = 'btn'; del.textContent = '×'; del.addEventListener('click', () => { todos.splice(i, 1); saveTodos(todos); render(); });
+        row.append(checkbox, txt, del);
+        listEl.appendChild(row);
+      })
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const v = input.value.trim(); if (!v) return;
+      todos.unshift({ text: v, done: false });
+      saveTodos(todos);
+      input.value = '';
+      render();
+    });
+
+    document.getElementById('resetTodo').addEventListener('click', () => {
+      if (confirm('Clear all todo tasks?')) { todos = []; saveTodos(todos); render(); }
+    });
+
+    render();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homepage-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homepage-api
+  template:
+    metadata:
+      labels:
+        app: homepage-api
+    spec:
+      containers:
+        - name: api
+          image: kavihamon/kavi-homepage:homepage-api
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          envFrom:
+            - configMapRef:
+                name: homepage-config
+            - secretRef:
+                name: homepage-secret
+          readinessProbe:
+            httpGet:
+              path: /api/healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/healthz
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
