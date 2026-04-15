@@ -336,6 +336,7 @@ func userIDFromContext(ctx context.Context) (primitive.ObjectID, bool) {
 
 func (h *Handler) me(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store")
 	tok := h.sessionToken(r)
 	if tok == "" {
 		w.WriteHeader(http.StatusUnauthorized)

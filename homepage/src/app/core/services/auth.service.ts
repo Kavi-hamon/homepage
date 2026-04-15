@@ -30,7 +30,7 @@ export class AuthService {
       return;
     }
     this.http
-      .get<AuthUser>(`${environment.apiUrl}/api/auth/me`, { withCredentials: true })
+      .get<AuthUser>(`${environment.apiUrl}/api/auth/me`, { withCredentials: true, headers: { 'Cache-Control': 'no-cache' } })
       .pipe(
         tap((u) => this.user.set(u)),
         catchError(() => {
