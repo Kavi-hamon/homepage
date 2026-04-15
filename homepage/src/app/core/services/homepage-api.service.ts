@@ -10,12 +10,12 @@ export class HomepageApiService {
   private readonly http = inject(HttpClient);
 
   getHomepage(): Observable<HomepageData> {
-    return this.http.get<HomepageData>(`${environment.apiUrl}/api/homepage`);
+    return this.http.get<HomepageData>(`${environment.apiUrl}/api/homepage`, { withCredentials: true });
   }
 
   saveHomepage(data: HomepageData): Observable<unknown> {
     return this.http
-      .put(`${environment.apiUrl}/api/homepage`, data)
+      .put(`${environment.apiUrl}/api/homepage`, data, { withCredentials: true })
       .pipe(catchError(() => of(null)));
   }
 }

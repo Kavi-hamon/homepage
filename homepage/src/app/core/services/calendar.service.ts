@@ -19,7 +19,7 @@ export class CalendarService {
 
   getUpcomingEvents(): Observable<CalendarEvent[] | null> {
     return this.http
-      .get<CalendarEvent[]>(`${environment.apiUrl}/api/calendar/events`)
+      .get<CalendarEvent[]>(`${environment.apiUrl}/api/calendar/events`, { withCredentials: true })
       .pipe(catchError(() => of(null)));
   }
 }
