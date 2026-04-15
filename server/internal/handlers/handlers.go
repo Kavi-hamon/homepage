@@ -5,7 +5,9 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -84,7 +86,8 @@ var defaultHomepageJSON = []byte(`{
           "w": 4,
           "h": 2
         }
-      ]
+      ],
+      "calendarWidgets": []
     }
   ],
   "settings": {
@@ -115,6 +118,7 @@ func New(cfg *config.Config, db *store.DB) *Handler {
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.email",
 			"https://www.googleapis.com/auth/userinfo.profile",
+			"https://www.googleapis.com/auth/calendar.readonly",
 		},
 		Endpoint: google.Endpoint,
 	}
@@ -134,6 +138,7 @@ func (h *Handler) Routes() chi.Router {
 			r.Use(h.requireAuth)
 			r.Get("/homepage", h.getHomepage)
 			r.Put("/homepage", h.putHomepage)
+			r.Get("/calendar/events", h.calendarEvents)
 		})
 	})
 	return r
@@ -175,7 +180,7 @@ func (h *Handler) startGoogle(w http.ResponseWriter, r *http.Request) {
 		Secure:   h.secureCookie(),
 	})
 
-	http.Redirect(w, r, h.oauth.AuthCodeURL(state, oauth2.AccessTypeOffline), http.StatusFound)
+	http.Redirect(w, r, h.oauth.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.SetAuthURLParam("prompt", "consent")), http.StatusFound)
 }
 
 func (h *Handler) secureCookie() bool {
@@ -255,6 +260,20 @@ func (h *Handler) googleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Persist Google tokens so the calendar endpoint can use them later.
+	// RefreshToken is only returned on first consent; preserve an existing one if
+	// Google omits it on subsequent logins.
+	if tok.AccessToken != "" {
+		rt := tok.RefreshToken
+		if rt == "" {
+			existing, _ := h.db.UserByID(ctx, user.ID)
+			if existing != nil {
+				rt = existing.GoogleRefreshToken
+			}
+		}
+		_ = h.db.SaveGoogleTokens(ctx, user.ID, tok.AccessToken, rt, tok.Expiry)
+	}
+
 	jwtStr, err := auth.SignUserID(h.cfg.JWTSecret, user.ID, sessionTTL)
 	if err != nil {
 		http.Redirect(w, r, h.cfg.FrontendOrigin+"/login?error=jwt", http.StatusFound)
@@ -267,8 +286,8 @@ func (h *Handler) googleCallback(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		MaxAge:   int(sessionTTL.Seconds()),
 		HttpOnly: true,
-		SameSite: http.SameSiteNoneMode,
-		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+		Secure:   h.secureCookie(),
 	})
 	http.Redirect(w, r, returnURL, http.StatusFound)
 }
@@ -349,8 +368,8 @@ func (h *Handler) logout(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		MaxAge:   -1,
 		HttpOnly: true,
-		SameSite: http.SameSiteNoneMode,
-		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+		Secure:   h.secureCookie(),
 	})
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write([]byte(`{"ok":true}`))
@@ -396,4 +415,117 @@ func (h *Handler) putHomepage(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write([]byte(`{"ok":true}`))
+}
+
+// calendarEvent is the simplified event shape returned to the frontend.
+type calendarEvent struct {
+	ID       string `json:"id"`
+	Summary  string `json:"summary"`
+	Start    string `json:"start"`
+	End      string `json:"end"`
+	IsAllDay bool   `json:"isAllDay"`
+	HtmlLink string `json:"htmlLink,omitempty"`
+	MeetLink string `json:"meetLink,omitempty"`
+	Location string `json:"location,omitempty"`
+}
+
+// googleCalendarResp is the subset of the Google Calendar API response we need.
+type googleCalendarResp struct {
+	Items []struct {
+		ID      string `json:"id"`
+		Summary string `json:"summary"`
+		Start   struct {
+			DateTime string `json:"dateTime"`
+			Date     string `json:"date"`
+		} `json:"start"`
+		End struct {
+			DateTime string `json:"dateTime"`
+			Date     string `json:"date"`
+		} `json:"end"`
+		HangoutLink string `json:"hangoutLink"`
+		HtmlLink    string `json:"htmlLink"`
+		Location    string `json:"location"`
+	} `json:"items"`
+}
+
+func (h *Handler) calendarEvents(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	uid, ok := userIDFromContext(ctx)
+	if !ok {
+		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+		return
+	}
+
+	user, err := h.db.UserByID(ctx, uid)
+	if err != nil || user.GoogleAccessToken == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		_, _ = w.Write([]byte(`{"error":"no_calendar_permission"}`))
+		return
+	}
+
+	// Reconstruct the token and create an auto-refreshing HTTP client.
+	storedTok := &oauth2.Token{
+		AccessToken:  user.GoogleAccessToken,
+		RefreshToken: user.GoogleRefreshToken,
+		Expiry:       user.GoogleTokenExpiry,
+	}
+	ts := h.oauth.TokenSource(ctx, storedTok)
+	client := oauth2.NewClient(ctx, ts)
+
+	now := time.Now().UTC().Format(time.RFC3339)
+	apiURL := fmt.Sprintf(
+		"https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=%s&maxResults=20&singleEvents=true&orderBy=startTime",
+		url.QueryEscape(now),
+	)
+
+	resp, err := client.Get(apiURL)
+	if err != nil {
+		http.Error(w, `{"error":"calendar_fetch_failed"}`, http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		log.Printf("calendar API error: status=%d body=%s", resp.StatusCode, body)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		_, _ = w.Write([]byte(`{"error":"no_calendar_permission"}`))
+		return
+	}
+
+	var gcal googleCalendarResp
+	if err := json.NewDecoder(resp.Body).Decode(&gcal); err != nil {
+		http.Error(w, `{"error":"calendar_parse_failed"}`, http.StatusInternalServerError)
+		return
+	}
+
+	// Save refreshed token back if it changed.
+	if newTok, err := ts.Token(); err == nil && newTok.AccessToken != user.GoogleAccessToken {
+		_ = h.db.SaveGoogleTokens(ctx, uid, newTok.AccessToken, newTok.RefreshToken, newTok.Expiry)
+	}
+
+	events := make([]calendarEvent, 0, len(gcal.Items))
+	for _, item := range gcal.Items {
+		ev := calendarEvent{
+			ID:       item.ID,
+			Summary:  item.Summary,
+			HtmlLink: item.HtmlLink,
+			MeetLink: item.HangoutLink,
+			Location: item.Location,
+		}
+		if item.Start.DateTime != "" {
+			ev.Start = item.Start.DateTime
+			ev.End = item.End.DateTime
+		} else {
+			ev.IsAllDay = true
+			ev.Start = item.Start.Date
+			ev.End = item.End.Date
+		}
+		events = append(events, ev)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(events)
 }

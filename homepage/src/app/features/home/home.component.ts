@@ -1,4 +1,4 @@
-import { CommonModule, DOCUMENT, isPlatformBrowser, TitleCasePipe } from '@angular/common';
+import { CommonModule, DatePipe, DOCUMENT, isPlatformBrowser, TitleCasePipe } from '@angular/common';
 import {
   Component,
   computed,
@@ -14,6 +14,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { afterNextRender } from '@angular/core';
 import {
+  type CalendarWidget,
   CustomWidget,
   type LinkGroup,
   type GridItemLayout,
@@ -25,6 +26,7 @@ import {
   SearchEngine,
 } from '../../core/models/homepage.models';
 import { AuthService } from '../../core/services/auth.service';
+import { CalendarService, type CalendarEvent } from '../../core/services/calendar.service';
 import { HomepageStateService } from '../../core/services/homepage-state.service';
 
 const GRAD_STYLES: Record<string, string> = {
@@ -43,10 +45,11 @@ const GRAD_STYLES: Record<string, string> = {
 type DashboardItemView =
   | { key: string; type: 'link'; link: QuickLink }
   | { key: string; type: 'collection'; group: LinkGroup }
-  | { key: string; type: 'widget'; widget: CustomWidget };
+  | { key: string; type: 'widget'; widget: CustomWidget }
+  | { key: string; type: 'calendar'; calendarWidget: CalendarWidget };
 
 type MoveDirection = 'up' | 'down' | 'left' | 'right';
-type DashboardToken = `q:${string}` | `g:${string}` | `w:${string}`;
+type DashboardToken = `q:${string}` | `g:${string}` | `w:${string}` | `c:${string}`;
 
 interface DragPreviewState {
   key: DashboardToken;
@@ -72,7 +75,7 @@ interface WidgetBridgeMessage {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TitleCasePipe],
+  imports: [CommonModule, DatePipe, FormsModule, RouterLink, TitleCasePipe],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
@@ -88,6 +91,43 @@ export class HomeComponent {
   private readonly platformId = inject(PLATFORM_ID);
   protected readonly state = inject(HomepageStateService);
   protected readonly auth = inject(AuthService);
+  private readonly calendarSvc = inject(CalendarService);
+
+  protected readonly calendarEvents = signal<CalendarEvent[] | null>(null);
+  protected readonly calendarLoading = signal(false);
+
+  protected readonly calendarGroups = computed(() => {
+    const events = this.calendarEvents();
+    if (!events) return null;
+
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayEnd = new Date(todayStart.getTime() + 86400000);
+    const weekEnd = new Date(todayStart.getTime() + 7 * 86400000);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    const groups: { label: string; events: CalendarEvent[] }[] = [
+      { label: 'Today', events: [] },
+      { label: 'This Week', events: [] },
+      { label: 'This Month', events: [] },
+      { label: 'Upcoming', events: [] },
+    ];
+
+    for (const ev of events) {
+      const d = new Date(ev.start);
+      if (d < todayEnd) {
+        groups[0].events.push(ev);
+      } else if (d < weekEnd) {
+        groups[1].events.push(ev);
+      } else if (d < monthEnd) {
+        groups[2].events.push(ev);
+      } else {
+        groups[3].events.push(ev);
+      }
+    }
+
+    return groups.filter(g => g.events.length > 0);
+  });
 
   protected readonly toast = signal<string | null>(null);
   private toastClear: ReturnType<typeof setTimeout> | null = null;
@@ -103,8 +143,21 @@ export class HomeComponent {
   @ViewChild('itemsGrid') private readonly itemsGridRef?: ElementRef<HTMLElement>;
 
   protected settingsOpen = signal(false);
+  protected confirmDialog = signal<{ message: string; action: () => void } | null>(null);
+
+  protected openConfirm(message: string, action: () => void): void {
+    this.confirmDialog.set({ message, action });
+  }
+  protected closeConfirm(): void {
+    this.confirmDialog.set(null);
+  }
+  protected runConfirm(): void {
+    this.confirmDialog()?.action();
+    this.confirmDialog.set(null);
+  }
   protected tabEditOpen = signal(false);
   protected addItemOpen = signal(false);
+  protected addItemStep = signal<'root' | 'widget'>('root');
   protected quickOpen = signal(false);
   protected groupOpen = signal(false);
   protected editingTabId = signal<string | null>(null);
@@ -219,10 +272,13 @@ await window.homepageWidget.setState({ todos: [] });`;
    */
   protected readonly overlayBg = computed(() => {
     const s = this.state.data().settings;
-    const raw = Math.max(0.3, Math.min(0.92, s.overlay));
+    const glass = s.theme === 'glass';
+    const photo = this.wallpaperIsPhoto();
+    // Glass theme enforces a higher dim floor so cards stay readable on any wallpaper
+    const glassMin = photo ? 0.62 : 0.48;
+    const raw = Math.max(glass ? glassMin : 0.3, Math.min(0.92, s.overlay));
     const t = (raw - 0.3) / 0.62;
     const light = s.theme === 'light';
-    const photo = this.wallpaperIsPhoto();
     let o: number;
     if (photo) {
       o = light ? 0.04 + t * 0.42 : 0.05 + t * 0.38;
@@ -254,6 +310,93 @@ await window.homepageWidget.setState({ todos: [] });`;
     return `${b}px`;
   });
 
+  protected readonly pageUrl = computed(() => {
+    if (!isPlatformBrowser(this.platformId)) {
+      return '';
+    }
+    return this.doc.location?.href ?? '';
+  });
+
+  protected readonly detectedBrowser = computed(() => {
+    if (!isPlatformBrowser(this.platformId)) {
+      return 'browser';
+    }
+    const ua = navigator.userAgent;
+    if (ua.includes('Edg/')) return 'Edge';
+    if (ua.includes('OPR/') || ua.includes('Opera')) return 'Opera';
+    if (ua.includes('Brave') || (navigator as Navigator & { brave?: unknown }).brave) return 'Brave';
+    if (ua.includes('Firefox')) return 'Firefox';
+    if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari';
+    if (ua.includes('Chrome')) return 'Chrome';
+    return 'browser';
+  });
+
+  protected readonly homepageSteps = computed((): string[] => {
+    switch (this.detectedBrowser()) {
+      case 'Chrome':
+        return [
+          'Click the three-dot menu (⋮) in the top-right corner → Settings',
+          'Go to Appearance → toggle on Show home button',
+          'Select Enter custom web address and paste the URL below',
+          'Also go to On startup → Open a specific page',
+          `Click Add a new page and paste the URL below`,
+        ];
+      case 'Edge':
+        return [
+          'Click the three-dot menu (⋯) in the top-right corner → Settings',
+          'Go to Appearance → toggle on Show home button',
+          'Go to Start, home, and new tabs',
+          'Under Home button, toggle it on and select Enter custom web address',
+          `Paste the URL below`,
+        ];
+      case 'Firefox':
+        return [
+          'Click the three-line menu (☰) → Settings',
+          'Under Home, set Homepage and new windows to Custom URLs and paste the URL below',
+          'To show the home button: right-click the toolbar → Customize Toolbar',
+          'Drag the Home icon from the panel into your toolbar',
+          'Click Done',
+        ];
+      case 'Safari':
+        return [
+          'Click Safari in the menu bar → Settings (or Preferences)',
+          'Go to the General tab',
+          `Paste the URL below into the Homepage field`,
+          'The home icon appears in the toolbar automatically once a homepage is set',
+        ];
+      case 'Opera':
+        return [
+          'Click the Opera logo → Settings',
+          'Go to Basic → On startup → Open a specific page',
+          `Enter the URL below`,
+          'To show the home button: right-click the toolbar → Show home button',
+        ];
+      case 'Brave':
+        return [
+          'Click the three-line menu → Settings',
+          'Go to Appearance → toggle on Show home button',
+          'Select Custom and paste the URL below',
+          'Also go to On startup → Open a specific page and paste the URL below',
+        ];
+      default:
+        return [
+          'Open your browser Settings',
+          'Find the Appearance section and enable the Home button',
+          'Find the Homepage or On startup section',
+          `Set the homepage URL to the value below`,
+        ];
+    }
+  });
+
+  protected copyHomepageUrl(): void {
+    if (!isPlatformBrowser(this.platformId) || !navigator.clipboard) {
+      return;
+    }
+    navigator.clipboard.writeText(this.pageUrl()).then(() => {
+      this.showToast('URL copied to clipboard');
+    });
+  }
+
   protected readonly greetingLine = computed(() => {
     const s = this.state.data().settings;
     if (!s.showClock) {
@@ -278,6 +421,29 @@ await window.homepageWidget.setState({ todos: [] });`;
         this.searchKbd.set(
           /Mac|iPhone|iPad|iPod/i.test(navigator.userAgent) ? '⌘K' : 'Ctrl+K',
         );
+      }
+      // Load calendar events once auth is resolved
+      const timer = setInterval(() => {
+        if (!this.auth.checked()) {
+          return;
+        }
+        clearInterval(timer);
+        if (this.auth.user()) {
+          this.loadCalendarEvents();
+        }
+      }, 80);
+      setTimeout(() => clearInterval(timer), 15000);
+    });
+  }
+
+  protected loadCalendarEvents(): void {
+    this.calendarLoading.set(true);
+    this.calendarSvc.getUpcomingEvents().subscribe((events) => {
+      this.calendarLoading.set(false);
+      this.calendarEvents.set(events);
+      if (events && events.length >= 0) {
+        // Auto-add a calendar widget to the active tab if none exists
+        this.state.addCalendarWidget();
       }
     });
   }
@@ -445,6 +611,9 @@ await window.homepageWidget.setState({ todos: [] });`;
     }
     if (item.type === 'collection') {
       return item.group;
+    }
+    if (item.type === 'calendar') {
+      return item.calendarWidget;
     }
     return item.widget;
   }
@@ -636,6 +805,7 @@ await window.homepageWidget.setState({ todos: [] });`;
     this.settingsOpen.set(false);
   }
 
+
   setTheme(id: ThemeId): void {
     this.state.setTheme(id);
   }
@@ -720,22 +890,38 @@ await window.homepageWidget.setState({ todos: [] });`;
     if (!this.itemsEditMode()) {
       return;
     }
+    this.addItemStep.set('root');
     this.addItemOpen.set(true);
   }
 
-  protected chooseAddItem(type: 'link' | 'collection' | 'widget'): void {
+  protected chooseAddItem(type: 'link' | 'collection' | 'widget' | 'calendar'): void {
     if (!this.itemsEditMode()) {
       return;
     }
-    this.addItemOpen.set(false);
     if (type === 'link') {
+      this.addItemOpen.set(false);
       this.openQuick();
       return;
     }
     if (type === 'collection') {
+      this.addItemOpen.set(false);
       this.openGroup();
       return;
     }
+    if (type === 'widget') {
+      this.addItemStep.set('widget');
+      return;
+    }
+    if (type === 'calendar') {
+      this.addItemOpen.set(false);
+      this.state.addCalendarWidget();
+      if (this.calendarEvents() === null && !this.calendarLoading()) {
+        this.loadCalendarEvents();
+      }
+      this.showToast('Meetings widget added');
+      return;
+    }
+    this.addItemOpen.set(false);
     this.openWidgetEditor();
   }
 
@@ -942,6 +1128,10 @@ await window.homepageWidget.setState({ todos: [] });`;
       this.sizeTarget.set({ type: 'collection', id: item.group.id });
       this.sizeWidth = item.group.w;
       this.sizeHeight = item.group.h;
+    } else if (item.type === 'calendar') {
+      this.sizeTarget.set({ type: 'widget', id: item.calendarWidget.id });
+      this.sizeWidth = item.calendarWidget.w;
+      this.sizeHeight = item.calendarWidget.h;
     } else {
       this.sizeTarget.set({ type: 'widget', id: item.widget.id });
       this.sizeWidth = item.widget.w;
@@ -1014,9 +1204,9 @@ await window.homepageWidget.setState({ todos: [] });`;
   }
 
   deleteGroup(gid: string): void {
-    if (window.confirm('Delete this group?')) {
+    this.openConfirm('Delete this collection?', () => {
       this.state.deleteGroup(gid);
-    }
+    });
   }
 
   openAll(gid: string): void {
@@ -1063,9 +1253,9 @@ await window.homepageWidget.setState({ todos: [] });`;
     this.state.removeTodo(i);
   }
   clearTodos(): void {
-    if (window.confirm('Clear all todos?')) {
+    this.openConfirm('Clear all todos?', () => {
       this.state.clearTodos();
-    }
+    });
   }
 
   onNotesInput(value: string): void {
@@ -1112,11 +1302,11 @@ await window.homepageWidget.setState({ todos: [] });`;
   }
 
   resetAll(): void {
-    if (window.confirm('Erase all data?')) {
+    this.openConfirm('Erase all data? This cannot be undone.', () => {
       this.state.resetAll();
       this.closeSettings();
       this.showToast('Data reset');
-    }
+    });
   }
 
   protected logout(): void {
@@ -1153,11 +1343,17 @@ await window.homepageWidget.setState({ todos: [] });`;
   }
 
   protected removeWidget(widgetId: string): void {
-    if (!window.confirm('Remove this custom widget?')) {
-      return;
-    }
-    this.state.removeCustomWidget(widgetId);
-    this.showToast('Widget removed');
+    this.openConfirm('Remove this widget?', () => {
+      this.state.removeCustomWidget(widgetId);
+      this.showToast('Widget removed');
+    });
+  }
+
+  protected removeCalendarWidget(widgetId: string): void {
+    this.openConfirm('Remove the meetings widget?', () => {
+      this.state.removeCalendarWidget(widgetId);
+      this.showToast('Meetings widget removed');
+    });
   }
 
   protected dashboardItems(): DashboardItemView[] {
@@ -1169,6 +1365,7 @@ await window.homepageWidget.setState({ todos: [] });`;
       ...tab.quickLinks.map((link) => ({ key: `q:${link.id}`, type: 'link' as const, link })),
       ...tab.groups.map((group) => ({ key: `g:${group.id}`, type: 'collection' as const, group })),
       ...tab.widgets.map((widget) => ({ key: `w:${widget.id}`, type: 'widget' as const, widget })),
+      ...tab.calendarWidgets.map((calendarWidget) => ({ key: `c:${calendarWidget.id}`, type: 'calendar' as const, calendarWidget })),
     ].sort((a, b) => {
       const aLayout = this.itemLayout(a);
       const bLayout = this.itemLayout(b);
@@ -1190,7 +1387,7 @@ await window.homepageWidget.setState({ todos: [] });`;
     if (!tab) {
       return;
     }
-    if (!this.state.moveTabItem(tab.id, itemKey as `q:${string}` | `g:${string}` | `w:${string}`, direction)) {
+    if (!this.state.moveTabItem(tab.id, itemKey as DashboardToken, direction)) {
       this.showToast('No open space in that direction');
     }
   }

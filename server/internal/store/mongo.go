@@ -12,12 +12,15 @@ import (
 )
 
 type User struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty"`
-	GoogleSub string             `bson:"google_sub"`
-	Email     string             `bson:"email"`
-	Name      string             `bson:"name"`
-	Picture   string             `bson:"picture"`
-	CreatedAt time.Time          `bson:"created_at"`
+	ID                 primitive.ObjectID `bson:"_id,omitempty"`
+	GoogleSub          string             `bson:"google_sub"`
+	Email              string             `bson:"email"`
+	Name               string             `bson:"name"`
+	Picture            string             `bson:"picture"`
+	CreatedAt          time.Time          `bson:"created_at"`
+	GoogleAccessToken  string             `bson:"google_access_token,omitempty"`
+	GoogleRefreshToken string             `bson:"google_refresh_token,omitempty"`
+	GoogleTokenExpiry  time.Time          `bson:"google_token_expiry,omitempty"`
 }
 
 type homepageDoc struct {
@@ -117,6 +120,17 @@ func (d *DB) GetHomepageData(ctx context.Context, userID primitive.ObjectID) ([]
 	}
 	b, err := json.Marshal(doc.Data)
 	return b, true, err
+}
+
+func (d *DB) SaveGoogleTokens(ctx context.Context, userID primitive.ObjectID, accessToken, refreshToken string, expiry time.Time) error {
+	col := d.client.Database(d.database).Collection("users")
+	update := bson.M{"$set": bson.M{
+		"google_access_token":  accessToken,
+		"google_refresh_token": refreshToken,
+		"google_token_expiry":  expiry,
+	}}
+	_, err := col.UpdateOne(ctx, bson.M{"_id": userID}, update)
+	return err
 }
 
 func (d *DB) SaveHomepageData(ctx context.Context, userID primitive.ObjectID, rawJSON []byte) error {

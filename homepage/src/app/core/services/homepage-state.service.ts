@@ -10,12 +10,12 @@ import { afterNextRender } from '@angular/core';
 import { catchError, of } from 'rxjs';
 import {
   clampItemLayout,
-  createDefaultCustomWidgets,
   createDefaultTab,
   DASHBOARD_GRID_COLUMNS,
   DASHBOARD_ITEM_DEFAULTS,
   defaultHomepageData,
   defaultSettings,
+  type CalendarWidget,
   type CustomWidget,
   type DashboardItemType,
   type GridItemLayout,
@@ -31,7 +31,7 @@ import {
 import { AuthService } from './auth.service';
 import { HomepageApiService } from './homepage-api.service';
 
-type DashboardToken = `q:${string}` | `g:${string}` | `w:${string}`;
+type DashboardToken = `q:${string}` | `g:${string}` | `w:${string}` | `c:${string}`;
 type MoveDirection = 'up' | 'down' | 'left' | 'right';
 
 interface LayoutEntry {
@@ -49,6 +49,9 @@ function tokenFor(type: DashboardItemType, id: string): DashboardToken {
   }
   if (type === 'collection') {
     return `g:${id}`;
+  }
+  if (type === 'calendar') {
+    return `c:${id}`;
   }
   return `w:${id}`;
 }
@@ -168,6 +171,15 @@ function normalizeGroup(raw: any): LinkGroup {
   };
 }
 
+function normalizeCalendarWidget(raw: any): CalendarWidget {
+  const layout = clampItemLayout('calendar', makeLegacyLayout('calendar', raw));
+  return {
+    id: raw?.id || newId('c'),
+    title: String(raw?.title || 'Upcoming Meetings'),
+    ...layout,
+  };
+}
+
 function normalizeWidget(raw: any): CustomWidget {
   const layout = clampItemLayout('widget', makeLegacyLayout('widget', raw));
   return {
@@ -184,14 +196,16 @@ function normalizeWidget(raw: any): CustomWidget {
 function normalizeTab(raw: any, legacyWidgets: any[] = []): HomepageTab {
   const quickLinks = Array.isArray(raw?.quickLinks) ? raw.quickLinks.map(normalizeQuickLink) : [];
   const groups = Array.isArray(raw?.groups) ? raw.groups.map(normalizeGroup) : [];
-  const widgetsSource = Array.isArray(raw?.widgets)
-    ? raw.widgets
-    : legacyWidgets;
+  const widgetsSource = Array.isArray(raw?.widgets) ? raw.widgets : legacyWidgets;
   const widgets = widgetsSource.map(normalizeWidget);
+  const calendarWidgets: CalendarWidget[] = Array.isArray(raw?.calendarWidgets)
+    ? raw.calendarWidgets.map(normalizeCalendarWidget)
+    : [];
   const entries: LayoutEntry[] = [
     ...quickLinks.map((item: QuickLink) => ({ token: tokenFor('link', item.id), type: 'link' as const, w: item.w, h: item.h, x: item.x, y: item.y })),
     ...groups.map((item: LinkGroup) => ({ token: tokenFor('collection', item.id), type: 'collection' as const, w: item.w, h: item.h, x: item.x, y: item.y })),
     ...widgets.map((item: CustomWidget) => ({ token: tokenFor('widget', item.id), type: 'widget' as const, w: item.w, h: item.h, x: item.x, y: item.y })),
+    ...calendarWidgets.map((item: CalendarWidget) => ({ token: tokenFor('calendar', item.id), type: 'calendar' as const, w: item.w, h: item.h, x: item.x, y: item.y })),
   ];
   const legacyOrder = Array.isArray(raw?.itemOrder) ? raw.itemOrder.filter((token: unknown): token is DashboardToken => typeof token === 'string') : [];
   const packed = packEntries(entries, legacyOrder);
@@ -202,6 +216,7 @@ function normalizeTab(raw: any, legacyWidgets: any[] = []): HomepageTab {
     quickLinks: quickLinks.map((item: QuickLink) => ({ ...item, ...packed.get(tokenFor('link', item.id))! })),
     groups: groups.map((item: LinkGroup) => ({ ...item, ...packed.get(tokenFor('collection', item.id))! })),
     widgets: widgets.map((item: CustomWidget) => ({ ...item, ...packed.get(tokenFor('widget', item.id))! })),
+    calendarWidgets: calendarWidgets.map((item: CalendarWidget) => ({ ...item, ...packed.get(tokenFor('calendar', item.id))! })),
   };
 }
 
@@ -357,6 +372,7 @@ export class HomepageStateService {
       ...tab.quickLinks.map((item) => ({ token: tokenFor('link', item.id), layout: item })),
       ...tab.groups.map((item) => ({ token: tokenFor('collection', item.id), layout: item })),
       ...tab.widgets.map((item) => ({ token: tokenFor('widget', item.id), layout: item })),
+      ...tab.calendarWidgets.map((item) => ({ token: tokenFor('calendar', item.id), layout: item })),
     ];
     return entries.filter((entry) => entry.token !== exclude).map((entry) => entry.layout);
   }
@@ -386,6 +402,7 @@ export class HomepageStateService {
     tab.quickLinks = [];
     tab.groups = [];
     tab.widgets = [];
+    tab.calendarWidgets = [];
     this._data.update((d) => ({
       ...d,
       tabs: [...d.tabs, tab],
@@ -709,6 +726,29 @@ export class HomepageStateService {
     }));
   }
 
+  addCalendarWidget(): void {
+    const tab = this.activeTab();
+    if (!tab || tab.calendarWidgets.length > 0) {
+      return;
+    }
+    const next: CalendarWidget = {
+      id: newId('c'),
+      title: 'Upcoming Meetings',
+      ...this.nextLayout(tab, 'calendar'),
+    };
+    this.updateActiveTab((current) => ({
+      ...current,
+      calendarWidgets: [...current.calendarWidgets, next],
+    }));
+  }
+
+  removeCalendarWidget(widgetId: string): void {
+    this.updateActiveTab((tab) => ({
+      ...tab,
+      calendarWidgets: tab.calendarWidgets.filter((w) => w.id !== widgetId),
+    }));
+  }
+
   updateCustomWidgetState(widgetId: string, stateJson: string): void {
     this.updateActiveTab((tab) => ({
       ...tab,
@@ -786,6 +826,7 @@ export class HomepageStateService {
         quickLinks: mutate(tab.quickLinks, 'link'),
         groups: mutate(tab.groups, 'collection'),
         widgets: mutate(tab.widgets, 'widget'),
+        calendarWidgets: mutate(tab.calendarWidgets, 'calendar'),
       };
     });
     return moved;
@@ -818,6 +859,7 @@ export class HomepageStateService {
         quickLinks: mutate(tab.quickLinks, 'link'),
         groups: mutate(tab.groups, 'collection'),
         widgets: mutate(tab.widgets, 'widget'),
+        calendarWidgets: mutate(tab.calendarWidgets, 'calendar'),
       };
     });
     return moved;

@@ -11,7 +11,7 @@ export interface GridItemLayout {
   h: number;
 }
 
-export type DashboardItemType = 'link' | 'collection' | 'widget';
+export type DashboardItemType = 'link' | 'collection' | 'widget' | 'calendar';
 
 export interface QuickLink extends GridItemLayout {
   id: string;
@@ -42,12 +42,18 @@ export interface CustomWidget extends GridItemLayout {
   stateJson: string;
 }
 
+export interface CalendarWidget extends GridItemLayout {
+  id: string;
+  title: string;
+}
+
 export interface HomepageTab {
   id: string;
   name: string;
   quickLinks: QuickLink[];
   groups: LinkGroup[];
   widgets: CustomWidget[];
+  calendarWidgets: CalendarWidget[];
 }
 
 export type ThemeId =
@@ -57,7 +63,8 @@ export type ThemeId =
   | 'sunset'
   | 'rose'
   | 'amber'
-  | 'light';
+  | 'light'
+  | 'glass';
 
 export type SearchEngine = 'google' | 'duckduckgo' | 'bing';
 
@@ -91,12 +98,14 @@ export const DASHBOARD_ITEM_LIMITS: Record<DashboardItemType, { minW: number; ma
   link: { minW: 1, maxW: 2, minH: 1, maxH: 2 },
   collection: { minW: 2, maxW: 6, minH: 2, maxH: 6 },
   widget: { minW: 3, maxW: 8, minH: 2, maxH: 6 },
+  calendar: { minW: 3, maxW: 8, minH: 2, maxH: 6 },
 };
 
 export const DASHBOARD_ITEM_DEFAULTS: Record<DashboardItemType, Pick<GridItemLayout, 'w' | 'h'>> = {
   link: { w: 1, h: 1 },
   collection: { w: 3, h: 2 },
   widget: { w: 4, h: 2 },
+  calendar: { w: 4, h: 3 },
 };
 
 export function clampDashboardColumns(value: unknown): number {
@@ -150,6 +159,7 @@ export const THEMES: { id: ThemeId; label: string; bodyClass?: string }[] = [
   { id: 'rose', label: 'Rose', bodyClass: 'theme-rose' },
   { id: 'amber', label: 'Amber', bodyClass: 'theme-amber' },
   { id: 'light', label: 'Light', bodyClass: 'theme-light' },
+  { id: 'glass', label: 'Glass' },
 ];
 
 export const SEARCH_ENGINES: Record<SearchEngine, (q: string) => string> = {
@@ -234,6 +244,7 @@ export function createDefaultTab(name = 'Home'): HomepageTab {
     quickLinks,
     groups,
     widgets: createDefaultCustomWidgets(),
+    calendarWidgets: [],
   };
 }
 

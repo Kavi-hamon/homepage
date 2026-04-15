@@ -1,1 +1,4 @@
-/*       /index.html   200
+# Proxy API and OAuth routes to the Go backend on Render.
+# Replace YOUR_BACKEND_NAME with your Render backend service name.
+/api/*   https://YOUR_BACKEND_NAME.onrender.com/api/:splat   200
+/auth/*  https://YOUR_BACKEND_NAME.onrender.com/auth/:splat  200
