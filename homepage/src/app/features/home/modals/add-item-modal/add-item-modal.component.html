@@ -1,0 +1,72 @@
+@if (open) {
+  <div
+    class="modal-scrim"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-add-item-title"
+    (click)="$event.target === $event.currentTarget && closed.emit()"
+  >
+    <div class="modal-panel modal-panel--sm modal-panel--sheet" (click)="$event.stopPropagation()">
+      <div class="modal-panel__head modal-panel__head--rich">
+        <div class="modal-panel__lead">
+          @if (step() === 'widget') {
+            <button type="button" class="modal-back" (click)="step.set('root')" aria-label="Back">←</button>
+          } @else {
+            <span class="modal-panel__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </span>
+          }
+          <div class="modal-panel__head-text">
+            <h2 id="modal-add-item-title" class="modal-panel__title">
+              @if (step() === 'widget') { Choose widget type } @else { Add item }
+            </h2>
+            <p class="modal-panel__sub">
+              @if (step() === 'widget') { Pick a built-in widget or create a custom one. }
+              @else { Choose what you want to add in this workspace. }
+            </p>
+          </div>
+        </div>
+        <button type="button" class="modal-close" (click)="closed.emit()" aria-label="Close">×</button>
+      </div>
+      <div class="modal-form__stack">
+        @if (step() === 'root') {
+          <button type="button" class="pick-card" (click)="choose('link')">
+            <span class="pick-card__title">Link</span>
+            <span class="pick-card__desc">A single shortcut tile.</span>
+          </button>
+          <button type="button" class="pick-card" (click)="choose('collection')">
+            <span class="pick-card__title">Collection</span>
+            <span class="pick-card__desc">A grouped set of links.</span>
+          </button>
+          <button type="button" class="pick-card" (click)="choose('widget')">
+            <span class="pick-card__title">Widget</span>
+            <span class="pick-card__desc">Built-in integrations or a custom HTML/CSS/JS card.</span>
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="pick-card"
+            [disabled]="!auth.user() || state.activeTab().calendarWidgets.length > 0"
+            (click)="choose('calendar')"
+          >
+            <span class="pick-card__title">📅 Meetings</span>
+            <span class="pick-card__desc">
+              @if (!auth.user()) { Sign in with Google to show upcoming meetings. }
+              @else if (state.activeTab().calendarWidgets.length > 0) { Already added to this workspace. }
+              @else { Your upcoming Google Calendar events. }
+            </span>
+          </button>
+          <button type="button" class="pick-card" (click)="chooseCustomWidget()">
+            <span class="pick-card__title">Custom</span>
+            <span class="pick-card__desc">A custom HTML/CSS/JS card.</span>
+          </button>
+        }
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="closed.emit()">Cancel</button>
+      </div>
+    </div>
+  </div>
+}

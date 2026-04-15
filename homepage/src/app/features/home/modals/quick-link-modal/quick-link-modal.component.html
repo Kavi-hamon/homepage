@@ -1,0 +1,51 @@
+@if (open) {
+  <div
+    class="modal-scrim"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-quick-link-title"
+    (click)="$event.target === $event.currentTarget && closed.emit()"
+  >
+    <div class="modal-panel modal-panel--sm modal-panel--sheet" (click)="$event.stopPropagation()">
+      <div class="modal-panel__head modal-panel__head--rich">
+        <div class="modal-panel__lead">
+          <span class="modal-panel__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 1 0-7l1-1a5 5 0 0 1 7 7l-1 1" />
+              <path d="M14 11a5 5 0 0 1 0 7l-1 1a5 5 0 0 1-7-7l1-1" />
+            </svg>
+          </span>
+          <div class="modal-panel__head-text">
+            <h2 id="modal-quick-link-title" class="modal-panel__title">Add quick link</h2>
+            <p class="modal-panel__sub">Pinned on this workspace for one-tap access.</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close" (click)="closed.emit()" aria-label="Close">×</button>
+      </div>
+      <div class="modal-form__stack">
+        <div class="field-block">
+          <label class="field-label" for="quick-title">Label</label>
+          <input id="quick-title" class="field" type="text" [(ngModel)]="title" placeholder="e.g. GitHub, Calendar" autocomplete="off" />
+          <p class="field-hint">Shown on the tile under your search bar.</p>
+        </div>
+        <div class="field-block">
+          <label class="field-label" for="quick-url">URL</label>
+          <input id="quick-url" class="field" type="url" [(ngModel)]="url" placeholder="https://example.com" (keydown.enter)="isValid && save()" />
+          <p class="field-hint">https:// is added automatically if you omit it.</p>
+        </div>
+        <div class="field-block">
+          <span class="field-label" id="quick-emoji-label">Icon</span>
+          <div class="emoji-field-row" role="group" aria-labelledby="quick-emoji-label">
+            <input class="field field--emoji" type="text" [(ngModel)]="emoji" maxlength="4" (keydown.enter)="isValid && save()" aria-describedby="quick-emoji-hint" />
+            <div class="emoji-preview-tile" aria-hidden="true">{{ emojiPreview(emoji, '🔗') }}</div>
+          </div>
+          <p id="quick-emoji-hint" class="field-hint">Emoji or short symbol for the tile.</p>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="closed.emit()">Cancel</button>
+        <button type="button" class="btn-primary" (click)="save()" [disabled]="!isValid">Add link</button>
+      </div>
+    </div>
+  </div>
+}

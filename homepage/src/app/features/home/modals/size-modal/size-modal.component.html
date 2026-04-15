@@ -1,0 +1,27 @@
+@if (open) {
+  <div class="modal-scrim" role="dialog" aria-modal="true" aria-labelledby="modal-card-size-title" (click)="$event.target === $event.currentTarget && closed.emit()">
+    <div class="modal-panel modal-panel--sm modal-panel--sheet" (click)="$event.stopPropagation()">
+      <div class="modal-panel__head">
+        <h2 id="modal-card-size-title" class="modal-panel__title">{{ title }}</h2>
+        <button type="button" class="modal-close" (click)="closed.emit()" aria-label="Close">×</button>
+      </div>
+      <div class="modal-form__stack">
+        <div class="field-row">
+          <div class="field-block field-block--half">
+            <label class="field-label" for="card-width">Width</label>
+            <input id="card-width" class="field" type="number" min="1" max="8" step="1" [(ngModel)]="width" />
+          </div>
+          <div class="field-block field-block--half">
+            <label class="field-label" for="card-height">Height</label>
+            <input id="card-height" class="field" type="number" min="1" max="6" step="1" [(ngModel)]="height" />
+          </div>
+        </div>
+        <p class="field-hint">If the new size would overlap another card, we'll keep the current size.</p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="closed.emit()">Cancel</button>
+        <button type="button" class="btn-primary" (click)="save()">Save size</button>
+      </div>
+    </div>
+  </div>
+}

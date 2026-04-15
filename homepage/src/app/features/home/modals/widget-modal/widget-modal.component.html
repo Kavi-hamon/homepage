@@ -1,0 +1,90 @@
+@if (open) {
+  <div class="modal-scrim" role="dialog" aria-modal="true" aria-labelledby="modal-custom-widget-title" (click)="$event.target === $event.currentTarget && closed.emit()">
+    <div class="modal-panel modal-panel--sm modal-panel--sheet modal-panel--lg" (click)="$event.stopPropagation()">
+      <div class="modal-panel__head modal-panel__head--rich">
+        <div class="modal-panel__lead">
+          <span class="modal-panel__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 18l6-6-6-6" />
+              <path d="M8 6l-6 6 6 6" />
+            </svg>
+          </span>
+          <div class="modal-panel__head-text">
+            <h2 id="modal-custom-widget-title" class="modal-panel__title">Custom widget</h2>
+            <p class="modal-panel__sub">HTML, CSS and JS run in a sandboxed iframe.</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close" (click)="closed.emit()" aria-label="Close">×</button>
+      </div>
+      <div class="modal-form__stack">
+        <div class="field-block">
+          <label class="field-label" for="widget-title">Title</label>
+          <input id="widget-title" class="field" type="text" maxlength="60" [(ngModel)]="title" />
+        </div>
+        <div class="field-row">
+          <div class="field-block field-block--half">
+            <label class="field-label" for="widget-example">Template (optional)</label>
+            <select id="widget-example" class="field" [(ngModel)]="example" (ngModelChange)="applyExample($event)">
+              <option value="blank">No template</option>
+              <option value="clock">Live Clock</option>
+              <option value="progress">Progress Ring</option>
+            </select>
+            <p class="field-hint">Choose a template to prefill code, or leave it as No template.</p>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-block field-block--half">
+            <label class="field-label" for="widget-width">Width</label>
+            <input id="widget-width" class="field" type="number" min="3" max="8" step="1" [(ngModel)]="width" />
+          </div>
+          <div class="field-block field-block--half">
+            <label class="field-label" for="widget-height">Height</label>
+            <input id="widget-height" class="field" type="number" min="2" max="6" step="1" [(ngModel)]="height" />
+          </div>
+        </div>
+        <details class="widget-guide">
+          <summary class="widget-guide__summary">Widget guide for you or your AI</summary>
+          <div class="widget-guide__body">
+            <p class="widget-guide__text">
+              Widgets run in a sandboxed iframe. Use plain HTML, CSS and JS. Avoid real form submission, avoid
+              <code>localStorage</code>, and use the provided storage bridge for persistence.
+            </p>
+            <div class="widget-guide__section">
+              <div class="widget-guide__label">Supported persistence API</div>
+              <pre class="widget-guide__code"><code [textContent]="widgetBridgeExample"></code></pre>
+            </div>
+            <div class="widget-guide__section">
+              <div class="widget-guide__label">Important rules</div>
+              <ul class="widget-guide__list">
+                <li>Do not use a real <code>&lt;form&gt;</code> submit flow. Use button click handlers instead.</li>
+                <li>Keep state JSON-serializable and reasonably small.</li>
+                <li>Links can open in a new tab. Widget state is saved through the homepage app.</li>
+                <li>When logged in, saved widget state syncs through the backend with the rest of the dashboard.</li>
+              </ul>
+            </div>
+            <div class="widget-guide__section">
+              <div class="widget-guide__label">Prompt for AI</div>
+              <textarea class="notes-field code-field widget-guide__prompt" rows="9" readonly [value]="widgetAiPrompt"></textarea>
+            </div>
+          </div>
+        </details>
+        <div class="field-block">
+          <label class="field-label" for="widget-html">HTML</label>
+          <textarea id="widget-html" class="notes-field code-field" rows="7" [(ngModel)]="html"></textarea>
+        </div>
+        <div class="field-block">
+          <label class="field-label" for="widget-css">CSS</label>
+          <textarea id="widget-css" class="notes-field code-field" rows="7" [(ngModel)]="css"></textarea>
+        </div>
+        <div class="field-block">
+          <label class="field-label" for="widget-js">JS</label>
+          <textarea id="widget-js" class="notes-field code-field" rows="7" [(ngModel)]="js"></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="closed.emit()">Cancel</button>
+        <button type="button" class="btn-primary" (click)="save()">Save widget</button>
+      </div>
+    </div>
+  </div>
+}

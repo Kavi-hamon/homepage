@@ -1,0 +1,23 @@
+@if (open) {
+  <div
+    class="modal-scrim"
+    role="alertdialog"
+    aria-modal="true"
+    aria-labelledby="confirm-heading"
+    (click)="$event.target === $event.currentTarget && closed.emit()"
+  >
+    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
+      <div class="modal-panel__head">
+        <h2 id="confirm-heading" class="modal-panel__title">Are you sure?</h2>
+        <button type="button" class="modal-close" (click)="closed.emit()" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="confirm-message">{{ message }}</p>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closed.emit()">Cancel</button>
+          <button type="button" class="btn-danger" (click)="confirmed.emit()">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

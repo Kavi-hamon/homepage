@@ -1,0 +1,207 @@
+<section class="block">
+  <div class="block__head">
+    <h2 class="block__title">Dashboard</h2>
+    @if (!itemsEditMode()) {
+      <button type="button" class="btn-text" (click)="itemsEditMode.set(true)">Customize</button>
+    } @else {
+      <div class="items-edit-actions">
+        <button type="button" class="btn-text" (click)="openAddItem()">+ Add card</button>
+        <button type="button" class="btn-text btn-text--muted" (click)="itemsEditMode.set(false)">Done</button>
+      </div>
+    }
+  </div>
+  <div
+    #itemsGrid
+    class="items-grid"
+    [class.items-grid--locked]="!itemsEditMode()"
+    [class.items-grid--dragging]="!!dragPreview()"
+    [ngStyle]="itemsGridStyle()"
+    (dragover)="onGridDragOver($event)"
+    (drop)="onGridDrop($event)"
+  >
+    @if (dragPreviewStyle(); as previewStyle) {
+      <div
+        class="grid-drop-indicator"
+        [class.grid-drop-indicator--invalid]="!dragPreview()?.valid"
+        [ngStyle]="previewStyle"
+      ></div>
+    }
+    @for (item of dashboardItems(); track item.key) {
+      @switch (item.type) {
+        @case ('link') {
+          <article class="item-cell" [class.item-cell--editing]="itemsEditMode()" [class.item-cell--dragging]="dragPreview()?.key === item.key" [ngStyle]="cardShellStyle(item)">
+            @if (itemsEditMode()) {
+              <div class="item-cell__tools item-cell__tools--link">
+                <button type="button" class="btn-mini btn-mini--icon btn-mini--drag" title="Drag card" aria-label="Drag card" draggable="true" (dragstart)="onItemDragStart(item, $event)" (dragend)="onItemDragEnd()">⠿</button>
+                <button type="button" class="btn-mini btn-mini--icon" title="Set size" aria-label="Set size" (click)="openSizeEditor(item)">S</button>
+                <button type="button" class="btn-mini btn-mini--icon btn-mini--danger" title="Remove link" aria-label="Remove link" (click)="removeQuickById(item.link.id)">×</button>
+              </div>
+            }
+            <a
+              class="tile tile--pop"
+              [href]="item.link.url"
+              target="_blank"
+              rel="noopener"
+              [attr.aria-disabled]="itemsEditMode()"
+              [attr.tabindex]="itemsEditMode() ? -1 : null"
+              (click)="suppressItemActivation($event)"
+            >
+              <span class="tile__emoji" aria-hidden="true">
+                <img
+                  class="tile__favicon"
+                  [src]="faviconUrl(item.link.url)"
+                  [attr.data-fallback]="faviconFallbackUrl(item.link.url)"
+                  alt=""
+                  loading="lazy"
+                  referrerpolicy="no-referrer"
+                  (error)="onFaviconError($event)"
+                />
+                <span class="tile__emoji-fallback">{{ item.link.emoji || '🔗' }}</span>
+              </span>
+              <span class="tile__title">{{ item.link.title }}</span>
+            </a>
+          </article>
+        }
+        @case ('collection') {
+          <article class="item-cell group-panel" [class.item-cell--editing]="itemsEditMode()" [class.item-cell--dragging]="dragPreview()?.key === item.key" [ngStyle]="cardShellStyle(item)">
+            @if (itemsEditMode()) {
+              <div class="item-cell__tools item-cell__tools--inset">
+                <button type="button" class="btn-mini btn-mini--icon btn-mini--drag" title="Drag card" aria-label="Drag card" draggable="true" (dragstart)="onItemDragStart(item, $event)" (dragend)="onItemDragEnd()">⠿</button>
+                <button type="button" class="btn-mini btn-mini--icon" title="Add link" aria-label="Add link" (click)="addGroupLink(item.group.id)">+</button>
+                <button type="button" class="btn-mini btn-mini--icon" title="Set size" aria-label="Set size" (click)="openSizeEditor(item)">S</button>
+                <button type="button" class="btn-mini btn-mini--icon" title="Edit collection" aria-label="Edit collection" (click)="editGroup(item.group.id)">✎</button>
+                <button type="button" class="btn-mini btn-mini--icon btn-mini--danger" title="Remove collection" aria-label="Remove collection" (click)="deleteGroup(item.group.id)">×</button>
+              </div>
+            }
+            <div class="group-panel__head">
+              <div class="group-panel__icon">{{ item.group.emoji || '📁' }}</div>
+              <div class="group-panel__meta">
+                <h3 class="group-panel__title">{{ item.group.title }}</h3>
+                <p class="group-panel__count">{{ item.group.links.length }} links</p>
+              </div>
+            </div>
+            <ul class="group-panel__list">
+              @for (l of item.group.links; track $index) {
+                <li>
+                  <a
+                    class="group-link"
+                    [href]="l.url"
+                    target="_blank"
+                    rel="noopener"
+                    [attr.aria-disabled]="itemsEditMode()"
+                    [attr.tabindex]="itemsEditMode() ? -1 : null"
+                    (click)="suppressItemActivation($event)"
+                  >
+                    <span class="group-link__ico" aria-hidden="true">
+                      <img
+                        class="group-link__favicon"
+                        [src]="faviconUrl(l.url)"
+                        [attr.data-fallback]="faviconFallbackUrl(l.url)"
+                        alt=""
+                        loading="lazy"
+                        referrerpolicy="no-referrer"
+                        (error)="onFaviconError($event)"
+                      />
+                      <span class="group-link__emoji">{{ l.emoji || '🔗' }}</span>
+                    </span>
+                    <span class="group-link__text">{{ l.title }}</span>
+                    @if (itemsEditMode()) {
+                      <span class="group-link__actions">
+                        <button type="button" class="group-link__action" aria-label="Move link up" [disabled]="$first" (click)="$event.preventDefault(); $event.stopPropagation(); moveGroupLink(item.group.id, $index, 'up')">↑</button>
+                        <button type="button" class="group-link__action" aria-label="Move link down" [disabled]="$last" (click)="$event.preventDefault(); $event.stopPropagation(); moveGroupLink(item.group.id, $index, 'down')">↓</button>
+                        <button type="button" class="group-link__action" aria-label="Edit link" (click)="$event.preventDefault(); $event.stopPropagation(); editGroupLink(item.group.id, $index)">✎</button>
+                        <button type="button" class="group-link__action group-link__action--danger" aria-label="Remove link" (click)="$event.preventDefault(); $event.stopPropagation(); removeGroupLink(item.group.id, $index)">×</button>
+                      </span>
+                    }
+                    <svg class="group-link__arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M7 7h10v10"/></svg>
+                  </a>
+                </li>
+              }
+            </ul>
+            <button type="button" class="btn-open-all" (click)="openAll(item.group.id)" [disabled]="itemsEditMode()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+              Open all in new tabs
+            </button>
+          </article>
+        }
+        @case ('widget') {
+          <article class="item-cell widget-card widget-card--custom" [class.item-cell--editing]="itemsEditMode()" [class.item-cell--dragging]="dragPreview()?.key === item.key" [ngStyle]="cardShellStyle(item)">
+            @if (itemsEditMode()) {
+              <div class="item-cell__tools item-cell__tools--inset">
+                <button type="button" class="btn-mini btn-mini--icon btn-mini--drag" title="Drag card" aria-label="Drag card" draggable="true" (dragstart)="onItemDragStart(item, $event)" (dragend)="onItemDragEnd()">⠿</button>
+                <button type="button" class="btn-mini btn-mini--icon" title="Set size" aria-label="Set size" (click)="openSizeEditor(item)">S</button>
+                <button type="button" class="btn-mini btn-mini--icon" title="Edit widget" aria-label="Edit widget" (click)="editWidget(item.widget.id)">✎</button>
+                <button type="button" class="btn-mini btn-mini--icon btn-mini--danger" title="Remove widget" aria-label="Remove widget" (click)="removeWidget(item.widget.id)">×</button>
+              </div>
+            }
+            <div class="widget-card__head">
+              <h3 class="widget-card__title">{{ item.widget.title }}</h3>
+            </div>
+            <iframe
+              class="widget-frame"
+              [class.widget-frame--editing]="itemsEditMode()"
+              [attr.data-widget-id]="item.widget.id"
+              [src]="widgetFrameSrc(item.widget)"
+              sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+              title="Custom widget"
+            ></iframe>
+          </article>
+        }
+        @case ('calendar') {
+          <article class="item-cell widget-card widget-card--calendar" [class.item-cell--editing]="itemsEditMode()" [class.item-cell--dragging]="dragPreview()?.key === item.key" [ngStyle]="cardShellStyle(item)">
+            @if (itemsEditMode()) {
+              <div class="item-cell__tools item-cell__tools--inset">
+                <button type="button" class="btn-mini btn-mini--icon btn-mini--drag" title="Drag card" aria-label="Drag card" draggable="true" (dragstart)="onItemDragStart(item, $event)" (dragend)="onItemDragEnd()">⠿</button>
+                <button type="button" class="btn-mini btn-mini--icon" title="Set size" aria-label="Set size" (click)="openSizeEditor(item)">S</button>
+                <button type="button" class="btn-mini btn-mini--icon btn-mini--danger" title="Remove widget" aria-label="Remove widget" (click)="removeCalendarWidget(item.calendarWidget.id)">×</button>
+              </div>
+            }
+            <div class="widget-card__head">
+              <h3 class="widget-card__title">📅 {{ item.calendarWidget.title }}</h3>
+              @if (!itemsEditMode()) {
+                <button type="button" class="btn-mini btn-mini--icon" title="Refresh" aria-label="Refresh meetings" (click)="loadCalendarEvents()">↻</button>
+              }
+            </div>
+            @if (calendarLoading()) {
+              <div class="cal-loading">Loading…</div>
+            } @else if (calendarEvents() === null) {
+              <div class="cal-empty">Could not load meetings. Make sure calendar access is granted.</div>
+            } @else if (calendarEvents()!.length === 0) {
+              <div class="cal-empty">No upcoming meetings.</div>
+            } @else {
+              <div class="cal-groups">
+                @for (group of calendarGroups()!; track group.label) {
+                  <div class="cal-group">
+                    <span class="cal-group__label">{{ group.label }}</span>
+                    <ul class="cal-list">
+                      @for (event of group.events; track event.id) {
+                        <li class="cal-event">
+                          <a class="cal-event__link" [href]="event.htmlLink || null" target="_blank" rel="noopener noreferrer">
+                            <span class="cal-event__title">{{ event.summary }}</span>
+                            <span class="cal-event__time">{{ event.start | date:'EEE, MMM d · h:mm a' }}</span>
+                          </a>
+                          @if (event.meetLink) {
+                            <a class="cal-event__meet" [href]="event.meetLink" target="_blank" rel="noopener noreferrer">
+                              <svg class="cal-event__meet-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M19.5 7.5 16 11V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-3l3.5 3.5a.5.5 0 0 0 .5-.354V7.854a.5.5 0 0 0-.5-.354Z"/>
+                              </svg>
+                              Join
+                            </a>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                }
+              </div>
+            }
+          </article>
+        }
+      }
+    } @empty {
+      <div class="empty-card empty-card--wide">No items yet — add a link, collection or widget.</div>
+    }
+  </div>
+</section>

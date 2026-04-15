@@ -5,16 +5,13 @@
 >
   <div
     class="wallpaper"
-    [class.gradient-aurora]="
-      wallpaperUseGradient() && wallpaperGradientClass() === 'gradient-aurora'
-    "
+    [class.gradient-aurora]="wallpaperUseGradient() && wallpaperGradientClass() === 'gradient-aurora'"
     [class.gradient-deep]="wallpaperGradientClass() === 'gradient-deep'"
     [class.gradient-dusk]="wallpaperGradientClass() === 'gradient-dusk'"
     [class.gradient-moss]="wallpaperGradientClass() === 'gradient-moss'"
     [class.gradient-sand]="wallpaperGradientClass() === 'gradient-sand'"
     [ngStyle]="wallpaperPhotoStyles()"
   ></div>
-  <!-- Blur under dim layer so frost doesn’t read as a white wash -->
   <div class="wallpaper-blur" [style.--blur]="blurPx()"></div>
   <div class="wallpaper-overlay" [style.background]="overlayBg()"></div>
 
@@ -43,8 +40,7 @@
                   role="button"
                   tabindex="0"
                   (keydown.enter)="$event.stopPropagation(); openTabEdit(tab.id, tab.name)"
-                  >⋯</span
-                >
+                >⋯</span>
               </button>
             }
           </div>
@@ -69,7 +65,7 @@
           <button
             type="button"
             class="btn-icon-round"
-            (click)="openSettings()"
+            (click)="settingsOpen.set(true)"
             title="Settings"
             aria-label="Open settings"
           >
@@ -113,244 +109,9 @@
       </div>
     </div>
 
-    <section class="block">
-      <div class="block__head">
-        <h2 class="block__title">Dashboard</h2>
-        @if (!itemsEditMode()) {
-          <button type="button" class="btn-text" (click)="itemsEditMode.set(true)">Customize</button>
-        } @else {
-          <div class="items-edit-actions">
-            <button type="button" class="btn-text" (click)="openAddItem()">+ Add card</button>
-            <button type="button" class="btn-text btn-text--muted" (click)="itemsEditMode.set(false)">Done</button>
-          </div>
-        }
-      </div>
-      <div
-        #itemsGrid
-        class="items-grid"
-        [class.items-grid--locked]="!itemsEditMode()"
-        [class.items-grid--dragging]="!!dragPreview()"
-        [ngStyle]="itemsGridStyle()"
-        (dragover)="onGridDragOver($event)"
-        (drop)="onGridDrop($event)"
-      >
-        @if (dragPreviewStyle(); as previewStyle) {
-          <div
-            class="grid-drop-indicator"
-            [class.grid-drop-indicator--invalid]="!dragPreview()?.valid"
-            [ngStyle]="previewStyle"
-          ></div>
-        }
-        @for (item of dashboardItems(); track item.key) {
-          @switch (item.type) {
-            @case ('link') {
-              <article class="item-cell" [class.item-cell--editing]="itemsEditMode()" [class.item-cell--dragging]="dragPreview()?.key === item.key" [ngStyle]="cardShellStyle(item)">
-                @if (itemsEditMode()) {
-                  <div class="item-cell__tools item-cell__tools--link">
-                    <button type="button" class="btn-mini btn-mini--icon btn-mini--drag" title="Drag card" aria-label="Drag card" draggable="true" (dragstart)="onItemDragStart(item, $event)" (dragend)="onItemDragEnd()">⠿</button>
-                    <button type="button" class="btn-mini btn-mini--icon" title="Set size" aria-label="Set size" (click)="openSizeEditor(item)">S</button>
-                    <button type="button" class="btn-mini btn-mini--icon btn-mini--danger" title="Remove link" aria-label="Remove link" (click)="removeQuickById(item.link.id)">×</button>
-                  </div>
-                }
-                <a
-                  class="tile tile--pop"
-                  [href]="item.link.url"
-                  target="_blank"
-                  rel="noopener"
-                  [attr.aria-disabled]="itemsEditMode()"
-                  [attr.tabindex]="itemsEditMode() ? -1 : null"
-                  (click)="suppressItemActivation($event)"
-                >
-                  <span class="tile__emoji" aria-hidden="true">
-                    <img
-                      class="tile__favicon"
-                      [src]="faviconUrl(item.link.url)"
-                      [attr.data-fallback]="faviconFallbackUrl(item.link.url)"
-                      alt=""
-                      loading="lazy"
-                      referrerpolicy="no-referrer"
-                      (error)="onFaviconError($event)"
-                    />
-                    <span class="tile__emoji-fallback">{{ item.link.emoji || '🔗' }}</span>
-                  </span>
-                  <span class="tile__title">{{ item.link.title }}</span>
-                </a>
-              </article>
-            }
-            @case ('collection') {
-              <article class="item-cell group-panel" [class.item-cell--editing]="itemsEditMode()" [class.item-cell--dragging]="dragPreview()?.key === item.key" [ngStyle]="cardShellStyle(item)">
-                @if (itemsEditMode()) {
-                  <div class="item-cell__tools item-cell__tools--inset">
-                    <button type="button" class="btn-mini btn-mini--icon btn-mini--drag" title="Drag card" aria-label="Drag card" draggable="true" (dragstart)="onItemDragStart(item, $event)" (dragend)="onItemDragEnd()">⠿</button>
-                    <button type="button" class="btn-mini btn-mini--icon" title="Add link" aria-label="Add link" (click)="addGroupLink(item.group.id)">+</button>
-                    <button type="button" class="btn-mini btn-mini--icon" title="Set size" aria-label="Set size" (click)="openSizeEditor(item)">S</button>
-                    <button type="button" class="btn-mini btn-mini--icon" title="Edit collection" aria-label="Edit collection" (click)="editGroup(item.group.id)">✎</button>
-                    <button type="button" class="btn-mini btn-mini--icon btn-mini--danger" title="Remove collection" aria-label="Remove collection" (click)="deleteGroup(item.group.id)">×</button>
-                  </div>
-                }
-                <div class="group-panel__head">
-                  <div class="group-panel__icon">{{ item.group.emoji || '📁' }}</div>
-                  <div class="group-panel__meta">
-                    <h3 class="group-panel__title">{{ item.group.title }}</h3>
-                    <p class="group-panel__count">{{ item.group.links.length }} links</p>
-                  </div>
-                </div>
-                <ul class="group-panel__list">
-                  @for (l of item.group.links; track $index) {
-                    <li>
-                      <a
-                        class="group-link"
-                        [href]="l.url"
-                        target="_blank"
-                        rel="noopener"
-                        [attr.aria-disabled]="itemsEditMode()"
-                        [attr.tabindex]="itemsEditMode() ? -1 : null"
-                        (click)="suppressItemActivation($event)"
-                      >
-                        <span class="group-link__ico" aria-hidden="true">
-                          <img
-                            class="group-link__favicon"
-                            [src]="faviconUrl(l.url)"
-                            [attr.data-fallback]="faviconFallbackUrl(l.url)"
-                            alt=""
-                            loading="lazy"
-                            referrerpolicy="no-referrer"
-                            (error)="onFaviconError($event)"
-                          />
-                          <span class="group-link__emoji">{{ l.emoji || '🔗' }}</span>
-                        </span>
-                        <span class="group-link__text">{{ l.title }}</span>
-                        @if (itemsEditMode()) {
-                          <span class="group-link__actions">
-                            <button
-                              type="button"
-                              class="group-link__action"
-                              aria-label="Move link up"
-                              [disabled]="$first"
-                              (click)="$event.preventDefault(); $event.stopPropagation(); moveGroupLink(item.group.id, $index, 'up')"
-                            >
-                              ↑
-                            </button>
-                            <button
-                              type="button"
-                              class="group-link__action"
-                              aria-label="Move link down"
-                              [disabled]="$last"
-                              (click)="$event.preventDefault(); $event.stopPropagation(); moveGroupLink(item.group.id, $index, 'down')"
-                            >
-                              ↓
-                            </button>
-                            <button
-                              type="button"
-                              class="group-link__action"
-                              aria-label="Edit link"
-                              (click)="$event.preventDefault(); $event.stopPropagation(); editGroupLink(item.group.id, $index)"
-                            >
-                              ✎
-                            </button>
-                            <button
-                              type="button"
-                              class="group-link__action group-link__action--danger"
-                              aria-label="Remove link"
-                              (click)="$event.preventDefault(); $event.stopPropagation(); removeGroupLink(item.group.id, $index)"
-                            >
-                              ×
-                            </button>
-                          </span>
-                        }
-                        <svg class="group-link__arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M7 7h10v10"/></svg>
-                      </a>
-                    </li>
-                  }
-                </ul>
-                <button type="button" class="btn-open-all" (click)="openAll(item.group.id)" [disabled]="itemsEditMode()">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
-                  Open all in new tabs
-                </button>
-              </article>
-            }
-            @case ('widget') {
-              <article class="item-cell widget-card widget-card--custom" [class.item-cell--editing]="itemsEditMode()" [class.item-cell--dragging]="dragPreview()?.key === item.key" [ngStyle]="cardShellStyle(item)">
-                @if (itemsEditMode()) {
-                  <div class="item-cell__tools item-cell__tools--inset">
-                    <button type="button" class="btn-mini btn-mini--icon btn-mini--drag" title="Drag card" aria-label="Drag card" draggable="true" (dragstart)="onItemDragStart(item, $event)" (dragend)="onItemDragEnd()">⠿</button>
-                    <button type="button" class="btn-mini btn-mini--icon" title="Set size" aria-label="Set size" (click)="openSizeEditor(item)">S</button>
-                    <button type="button" class="btn-mini btn-mini--icon" title="Edit widget" aria-label="Edit widget" (click)="editWidget(item.widget.id)">✎</button>
-                    <button type="button" class="btn-mini btn-mini--icon btn-mini--danger" title="Remove widget" aria-label="Remove widget" (click)="removeWidget(item.widget.id)">×</button>
-                  </div>
-                }
-                <div class="widget-card__head">
-                  <h3 class="widget-card__title">{{ item.widget.title }}</h3>
-                </div>
-                <iframe
-                  class="widget-frame"
-                  [class.widget-frame--editing]="itemsEditMode()"
-                  [attr.data-widget-id]="item.widget.id"
-                  [src]="widgetFrameSrc(item.widget)"
-                  sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
-                  loading="lazy"
-                  referrerpolicy="no-referrer"
-                  title="Custom widget"
-                ></iframe>
-              </article>
-            }
-            @case ('calendar') {
-              <article class="item-cell widget-card widget-card--calendar" [class.item-cell--editing]="itemsEditMode()" [class.item-cell--dragging]="dragPreview()?.key === item.key" [ngStyle]="cardShellStyle(item)">
-                @if (itemsEditMode()) {
-                  <div class="item-cell__tools item-cell__tools--inset">
-                    <button type="button" class="btn-mini btn-mini--icon btn-mini--drag" title="Drag card" aria-label="Drag card" draggable="true" (dragstart)="onItemDragStart(item, $event)" (dragend)="onItemDragEnd()">⠿</button>
-                    <button type="button" class="btn-mini btn-mini--icon" title="Set size" aria-label="Set size" (click)="openSizeEditor(item)">S</button>
-                    <button type="button" class="btn-mini btn-mini--icon btn-mini--danger" title="Remove widget" aria-label="Remove widget" (click)="removeCalendarWidget(item.calendarWidget.id)">×</button>
-                  </div>
-                }
-                <div class="widget-card__head">
-                  <h3 class="widget-card__title">📅 {{ item.calendarWidget.title }}</h3>
-                  @if (!itemsEditMode()) {
-                    <button type="button" class="btn-mini btn-mini--icon" title="Refresh" aria-label="Refresh meetings" (click)="loadCalendarEvents()">↻</button>
-                  }
-                </div>
-                @if (calendarLoading()) {
-                  <div class="cal-loading">Loading…</div>
-                } @else if (calendarEvents() === null) {
-                  <div class="cal-empty">Could not load meetings. Make sure calendar access is granted.</div>
-                } @else if (calendarEvents()!.length === 0) {
-                  <div class="cal-empty">No upcoming meetings.</div>
-                } @else {
-                  <div class="cal-groups">
-                    @for (group of calendarGroups()!; track group.label) {
-                      <div class="cal-group">
-                        <span class="cal-group__label">{{ group.label }}</span>
-                        <ul class="cal-list">
-                          @for (event of group.events; track event.id) {
-                            <li class="cal-event">
-                              <a class="cal-event__link" [href]="event.htmlLink || null" target="_blank" rel="noopener noreferrer">
-                                <span class="cal-event__title">{{ event.summary }}</span>
-                                <span class="cal-event__time">{{ event.start | date:'EEE, MMM d · h:mm a' }}</span>
-                              </a>
-                              @if (event.meetLink) {
-                                <a class="cal-event__meet" [href]="event.meetLink" target="_blank" rel="noopener noreferrer">
-                                  <svg class="cal-event__meet-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                    <path d="M19.5 7.5 16 11V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-3l3.5 3.5a.5.5 0 0 0 .5-.354V7.854a.5.5 0 0 0-.5-.354Z"/>
-                                  </svg>
-                                  Join
-                                </a>
-                              }
-                            </li>
-                          }
-                        </ul>
-                      </div>
-                    }
-                  </div>
-                }
-              </article>
-            }
-          }
-        } @empty {
-          <div class="empty-card empty-card--wide">No items yet — add a link, collection or widget.</div>
-        }
-      </div>
-    </section>
+    <app-items-block (action)="onDashboardAction($event)"></app-items-block>
   </main>
+
   <p class="footer-credit">
     Developed by Kaviarasu · Feedback:
     <a href="mailto:kaviarasu@hamon.in">kaviarasu@hamon.in</a>
@@ -372,710 +133,74 @@
     </button>
   }
 
-@if (confirmDialog(); as dialog) {
-  <div
-    class="modal-scrim"
-    role="alertdialog"
-    aria-modal="true"
-    aria-labelledby="confirm-heading"
-    (click)="$event.target === $event.currentTarget && closeConfirm()"
-  >
-    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
-      <div class="modal-panel__head">
-        <h2 id="confirm-heading" class="modal-panel__title">Are you sure?</h2>
-        <button type="button" class="modal-close" (click)="closeConfirm()" aria-label="Close">×</button>
-      </div>
-      <div class="modal-body">
-        <p class="confirm-message">{{ dialog.message }}</p>
-        <div class="modal-actions">
-          <button type="button" class="btn-secondary" (click)="closeConfirm()">Cancel</button>
-          <button type="button" class="btn-danger" (click)="runConfirm()">Confirm</button>
-        </div>
-      </div>
-    </div>
-  </div>
-}
+  <app-confirm-dialog
+    [open]="!!confirmDialog()"
+    [message]="confirmDialog()?.message ?? ''"
+    (confirmed)="runConfirm()"
+    (closed)="closeConfirm()"
+  ></app-confirm-dialog>
 
-@if (settingsOpen()) {
-  <div
-    class="modal-scrim"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="settings-heading"
-    (click)="$event.target === $event.currentTarget && closeSettings()"
-  >
-    <div class="modal-panel" (click)="$event.stopPropagation()">
-      <div class="modal-panel__head">
-        <h2 id="settings-heading" class="modal-panel__title">Settings</h2>
-        <button type="button" class="modal-close" (click)="closeSettings()" aria-label="Close">×</button>
-      </div>
-      <div class="modal-body">
-        <section class="modal-section">
-          <h3 class="modal-section__label">Appearance</h3>
-          <div class="chip-row">
-            @for (t of THEMES; track t.id) {
-              <button
-                type="button"
-                class="chip"
-                [class.chip--on]="state.data().settings.theme === t.id"
-                (click)="setTheme(t.id)"
-              >{{ t.label }}</button>
-            }
-          </div>
-        </section>
-        <section class="modal-section">
-          <h3 class="modal-section__label">Wallpaper</h3>
-          <div class="wall-grid">
-            @for (p of WALL_PRESETS; track p.id) {
-              <button
-                type="button"
-                class="wall-tile"
-                [class.wall-tile--on]="state.data().settings.wallpaper === p.id"
-                [attr.style]="wallOptStyle(p.id)"
-                (click)="setWallpaper(p.id)"
-              ><span>{{ p.label }}</span></button>
-            }
-            <button
-              type="button"
-              class="wall-tile wall-tile--custom"
-              [class.wall-tile--on]="state.data().settings.wallpaper === 'custom'"
-              (click)="setWallpaper('custom')"
-            ><span>Custom URL</span></button>
-          </div>
-          <label class="field-label">Image URL</label>
-          <div class="field-row">
-            <input #customWall class="field" type="url" placeholder="https://…" [value]="state.data().settings.customWallUrl" />
-            <button type="button" class="btn-secondary" (click)="applyCustomWall(customWall.value)">Apply</button>
-          </div>
-          <div class="slider-block">
-            <span class="slider-block__label">Dim</span>
-            <input type="range" min="0.3" max="0.92" step="0.02" [value]="state.data().settings.overlay" (input)="onOverlayInput(+$any($event.target).value)" />
-            <span class="slider-block__val">{{ (state.data().settings.overlay * 100) | number: '1.0-0' }}%</span>
-          </div>
-          <div class="slider-block">
-            <span class="slider-block__label">Blur</span>
-            <input type="range" min="0" max="28" step="1" [value]="state.data().settings.blur" (input)="onBlurInput(+$any($event.target).value)" />
-            <span class="slider-block__val">{{ state.data().settings.blur }}px</span>
-          </div>
-          <p class="settings-hint settings-hint--compact">
-            <strong>Dim</strong> adds a dark/light wash over the wallpaper — slide it <strong>right</strong> if cards or text need more contrast.
-          </p>
-          @if (!wallpaperUseGradient()) {
-            <p class="settings-hint">Photo wallpapers use a lighter frost so the picture stays visible. Cards use a neutral tint so they read on bright or dark photos—raise <strong>Dim</strong> if text feels low-contrast.</p>
-          }
-        </section>
-        <section class="modal-section">
-          <h3 class="modal-section__label">Search</h3>
-          <div class="chip-row">
-            @for (e of engines; track e) {
-              <button type="button" class="chip" [class.chip--on]="state.data().settings.searchEngine === e" (click)="setEngine(e)">{{ e | titlecase }}</button>
-            }
-          </div>
-        </section>
-        <section class="modal-section">
-          <h3 class="modal-section__label">Display</h3>
-          <label class="check-row">
-            <input type="checkbox" [checked]="state.data().settings.showClock" (change)="toggleShowClock($any($event.target).checked)" />
-            <span>Show clock & greeting</span>
-          </label>
-          <label class="field-label">Your name</label>
-          <input class="field" type="text" [value]="state.data().settings.userName" (change)="setUserName($any($event.target).value)" placeholder="there" />
-        </section>
-        <section class="modal-section">
-          <h3 class="modal-section__label">Set as Homepage</h3>
-          <p class="settings-hint settings-hint--compact">
-            Follow these steps to set this page as your <strong>{{ detectedBrowser() }}</strong> homepage and enable the home button in your toolbar:
-          </p>
-          <ol class="homepage-steps">
-            @for (step of homepageSteps(); track $index) {
-              <li>{{ step }}</li>
-            }
-          </ol>
-          <label class="field-label">Your homepage URL</label>
-          <div class="field-row">
-            <input class="field" readonly [value]="pageUrl()" />
-            <button type="button" class="btn-secondary" (click)="copyHomepageUrl()">Copy URL</button>
-          </div>
-        </section>
-        <section class="modal-section">
-          <h3 class="modal-section__label">Data</h3>
-          <div class="data-actions">
-            <button type="button" class="btn-secondary" (click)="exportData()">Export JSON</button>
-            <button type="button" class="btn-secondary" (click)="triggerImport(importInput)">Import</button>
-            <input #importInput type="file" accept=".json,application/json" hidden (change)="onImportFile($event)" />
-            <button type="button" class="btn-danger" (click)="resetAll()">Reset all data</button>
-          </div>
-        </section>
-      </div>
-    </div>
-  </div>
-}
+  <app-settings-modal
+    [open]="settingsOpen()"
+    (closed)="settingsOpen.set(false)"
+    (confirm)="openConfirm($event.message, $event.action)"
+    (toast)="showToast($event)"
+  ></app-settings-modal>
 
+  <app-workspace-modal
+    [tabEditOpen]="tabEditOpen()"
+    [newWorkspaceOpen]="newWorkspaceOpen()"
+    [tabNameDraft]="tabNameDraft"
+    [tabCount]="state.data().tabs.length"
+    [newWorkspaceName]="'Work'"
+    (tabEditClosed)="tabEditOpen.set(false)"
+    (newWorkspaceClosed)="newWorkspaceOpen.set(false)"
+    (tabNameSaved)="onTabNameSaved($event)"
+    (tabDeleted)="onTabDeleted()"
+    (newWorkspaceSaved)="onNewWorkspaceSaved($event)"
+  ></app-workspace-modal>
 
-@if (tabEditOpen()) {
-  <div
-    class="modal-scrim"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="modal-workspace-edit-title"
-    (click)="$event.target === $event.currentTarget && tabEditOpen.set(false)"
-  >
-    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
-      <div class="modal-panel__head">
-        <h2 id="modal-workspace-edit-title" class="modal-panel__title">Workspace</h2>
-        <button type="button" class="modal-close" (click)="tabEditOpen.set(false)" aria-label="Close">×</button>
-      </div>
-      <label class="field-label">Name</label>
-      <input class="field" type="text" maxlength="40" [(ngModel)]="tabNameDraft" />
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" (click)="tabEditOpen.set(false)">Cancel</button>
-        @if (state.data().tabs.length > 1) {
-          <button type="button" class="btn-danger" (click)="deleteCurrentTab()">Delete</button>
-        }
-        <button type="button" class="btn-primary" (click)="saveTabName()">Save</button>
-      </div>
-    </div>
-  </div>
-}
+  <app-add-item-modal
+    [open]="addItemOpen()"
+    (closed)="addItemOpen.set(false)"
+    (chose)="onAddItemChose($event)"
+  ></app-add-item-modal>
 
-@if (newWorkspaceOpen()) {
-  <div
-    class="modal-scrim"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="modal-new-workspace-title"
-    (click)="$event.target === $event.currentTarget && newWorkspaceOpen.set(false)"
-  >
-    <div class="modal-panel modal-panel--sm modal-panel--sheet" (click)="$event.stopPropagation()">
-      <div class="modal-panel__head modal-panel__head--rich">
-        <div class="modal-panel__lead">
-          <span class="modal-panel__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="7" height="7" rx="1.5" />
-              <rect x="14" y="3" width="7" height="7" rx="1.5" />
-              <rect x="3" y="14" width="7" height="7" rx="1.5" />
-              <rect x="14" y="14" width="7" height="7" rx="1.5" />
-            </svg>
-          </span>
-          <div class="modal-panel__head-text">
-            <h2 id="modal-new-workspace-title" class="modal-panel__title">New workspace</h2>
-            <p class="modal-panel__sub">A separate board of shortcuts, collections, and widgets.</p>
-          </div>
-        </div>
-        <button type="button" class="modal-close" (click)="newWorkspaceOpen.set(false)" aria-label="Close">×</button>
-      </div>
-      <div class="modal-form__stack">
-        <div class="field-block">
-          <label class="field-label" for="new-workspace-name">Workspace name</label>
-          <input
-            id="new-workspace-name"
-            class="field"
-            type="text"
-            maxlength="40"
-            [(ngModel)]="newWorkspaceName"
-            (keydown.enter)="saveNewWorkspace()"
-            placeholder="e.g. Work, Personal, Study"
-            autocomplete="off"
-          />
-          <p class="field-hint">Up to 40 characters. You can rename anytime from the tab menu.</p>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" (click)="newWorkspaceOpen.set(false)">Cancel</button>
-        <button
-          type="button"
-          class="btn-primary"
-          (click)="saveNewWorkspace()"
-          [disabled]="!newWorkspaceName.trim()"
-        >
-          Create workspace
-        </button>
-      </div>
-    </div>
-  </div>
-}
+  <app-quick-link-modal
+    [open]="quickOpen()"
+    (closed)="quickOpen.set(false)"
+    (saved)="onQuickLinkSaved($event)"
+  ></app-quick-link-modal>
 
-@if (addItemOpen()) {
-  <div
-    class="modal-scrim"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="modal-add-item-title"
-    (click)="$event.target === $event.currentTarget && addItemOpen.set(false)"
-  >
-    <div class="modal-panel modal-panel--sm modal-panel--sheet" (click)="$event.stopPropagation()">
-      <div class="modal-panel__head modal-panel__head--rich">
-        <div class="modal-panel__lead">
-          @if (addItemStep() === 'widget') {
-            <button type="button" class="modal-back" (click)="addItemStep.set('root')" aria-label="Back">←</button>
-          } @else {
-            <span class="modal-panel__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-            </span>
-          }
-          <div class="modal-panel__head-text">
-            <h2 id="modal-add-item-title" class="modal-panel__title">
-              @if (addItemStep() === 'widget') { Choose widget type } @else { Add item }
-            </h2>
-            <p class="modal-panel__sub">
-              @if (addItemStep() === 'widget') { Pick a built-in widget or create a custom one. }
-              @else { Choose what you want to add in this workspace. }
-            </p>
-          </div>
-        </div>
-        <button type="button" class="modal-close" (click)="addItemOpen.set(false)" aria-label="Close">×</button>
-      </div>
-      <div class="modal-form__stack">
-        @if (addItemStep() === 'root') {
-          <button type="button" class="pick-card" (click)="chooseAddItem('link')">
-            <span class="pick-card__title">Link</span>
-            <span class="pick-card__desc">A single shortcut tile.</span>
-          </button>
-          <button type="button" class="pick-card" (click)="chooseAddItem('collection')">
-            <span class="pick-card__title">Collection</span>
-            <span class="pick-card__desc">A grouped set of links.</span>
-          </button>
-          <button type="button" class="pick-card" (click)="chooseAddItem('widget')">
-            <span class="pick-card__title">Widget</span>
-            <span class="pick-card__desc">Built-in integrations or a custom HTML/CSS/JS card.</span>
-          </button>
-        } @else {
-          <button
-            type="button"
-            class="pick-card"
-            [disabled]="!auth.user() || state.activeTab().calendarWidgets.length > 0"
-            (click)="chooseAddItem('calendar')"
-          >
-            <span class="pick-card__title">📅 Meetings</span>
-            <span class="pick-card__desc">
-              @if (!auth.user()) { Sign in with Google to show upcoming meetings. }
-              @else if (state.activeTab().calendarWidgets.length > 0) { Already added to this workspace. }
-              @else { Your upcoming Google Calendar events. }
-            </span>
-          </button>
-          <button type="button" class="pick-card" (click)="addItemOpen.set(false); openWidgetEditor()">
-            <span class="pick-card__title">Custom</span>
-            <span class="pick-card__desc">A custom HTML/CSS/JS card.</span>
-          </button>
-        }
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" (click)="addItemOpen.set(false)">Cancel</button>
-      </div>
-    </div>
-  </div>
-}
+  <app-collection-modals
+    [groupOpen]="groupOpen()"
+    [groupEditOpen]="groupEditOpen()"
+    [groupEditTargetId]="groupEditTargetId()"
+    [groupLinkOpen]="groupLinkOpen()"
+    [groupLinkTargetId]="groupLinkTargetId()"
+    [groupLinkEditIndex]="groupLinkEditIndex()"
+    (groupClosed)="groupOpen.set(false)"
+    (groupSaved)="onGroupSaved($event)"
+    (groupEditClosed)="groupEditOpen.set(false); groupEditTargetId.set(null)"
+    (groupEditSaved)="onGroupEditSaved($event)"
+    (groupLinkClosed)="groupLinkOpen.set(false); groupLinkTargetId.set(null); groupLinkEditIndex.set(null)"
+    (groupLinkSaved)="onGroupLinkSaved($event)"
+  ></app-collection-modals>
 
-@if (quickOpen()) {
-  <div
-    class="modal-scrim"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="modal-quick-link-title"
-    (click)="$event.target === $event.currentTarget && quickOpen.set(false)"
-  >
-    <div class="modal-panel modal-panel--sm modal-panel--sheet" (click)="$event.stopPropagation()">
-      <div class="modal-panel__head modal-panel__head--rich">
-        <div class="modal-panel__lead">
-          <span class="modal-panel__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M10 13a5 5 0 0 1 0-7l1-1a5 5 0 0 1 7 7l-1 1" />
-              <path d="M14 11a5 5 0 0 1 0 7l-1 1a5 5 0 0 1-7-7l1-1" />
-            </svg>
-          </span>
-          <div class="modal-panel__head-text">
-            <h2 id="modal-quick-link-title" class="modal-panel__title">Add quick link</h2>
-            <p class="modal-panel__sub">Pinned on this workspace for one-tap access.</p>
-          </div>
-        </div>
-        <button type="button" class="modal-close" (click)="quickOpen.set(false)" aria-label="Close">×</button>
-      </div>
-      <div class="modal-form__stack">
-        <div class="field-block">
-          <label class="field-label" for="quick-title">Label</label>
-          <input
-            id="quick-title"
-            class="field"
-            type="text"
-            [(ngModel)]="quickTitle"
-            placeholder="e.g. GitHub, Calendar"
-            autocomplete="off"
-          />
-          <p class="field-hint">Shown on the tile under your search bar.</p>
-        </div>
-        <div class="field-block">
-          <label class="field-label" for="quick-url">URL</label>
-          <input
-            id="quick-url"
-            class="field"
-            type="url"
-            [(ngModel)]="quickUrl"
-            placeholder="https://example.com"
-            (keydown.enter)="quickFormValid() && saveQuick()"
-          />
-          <p class="field-hint">https:// is added automatically if you omit it.</p>
-        </div>
-        <div class="field-block">
-          <span class="field-label" id="quick-emoji-label">Icon</span>
-          <div class="emoji-field-row" role="group" aria-labelledby="quick-emoji-label">
-            <input
-              class="field field--emoji"
-              type="text"
-              [(ngModel)]="quickEmoji"
-              maxlength="4"
-              (keydown.enter)="quickFormValid() && saveQuick()"
-              aria-describedby="quick-emoji-hint"
-            />
-            <div class="emoji-preview-tile" aria-hidden="true">{{ emojiPreview(quickEmoji, '🔗') }}</div>
-          </div>
-          <p id="quick-emoji-hint" class="field-hint">Emoji or short symbol for the tile.</p>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" (click)="quickOpen.set(false)">Cancel</button>
-        <button
-          type="button"
-          class="btn-primary"
-          (click)="saveQuick()"
-          [disabled]="!quickFormValid()"
-        >
-          Add link
-        </button>
-      </div>
-    </div>
-  </div>
-}
+  <app-widget-modal
+    [open]="widgetOpen()"
+    [editingWidgetId]="editingWidgetId()"
+    (closed)="widgetOpen.set(false)"
+    (saved)="onWidgetSaved($event)"
+    (toast)="showToast($event)"
+  ></app-widget-modal>
 
-@if (groupOpen()) {
-  <div
-    class="modal-scrim"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="modal-new-collection-title"
-    (click)="$event.target === $event.currentTarget && groupOpen.set(false)"
-  >
-    <div class="modal-panel modal-panel--sm modal-panel--sheet" (click)="$event.stopPropagation()">
-      <div class="modal-panel__head modal-panel__head--rich">
-        <div class="modal-panel__lead">
-          <span class="modal-panel__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-            </svg>
-          </span>
-          <div class="modal-panel__head-text">
-            <h2 id="modal-new-collection-title" class="modal-panel__title">New collection</h2>
-            <p class="modal-panel__sub">Group related links—open the whole set at once when you need to.</p>
-          </div>
-        </div>
-        <button type="button" class="modal-close" (click)="groupOpen.set(false)" aria-label="Close">×</button>
-      </div>
-      <div class="modal-form__stack">
-        <div class="field-block">
-          <label class="field-label" for="group-title">Collection name</label>
-          <input
-            id="group-title"
-            class="field"
-            type="text"
-            [(ngModel)]="groupTitle"
-            placeholder="e.g. Dev tools, Morning reads"
-            (keydown.enter)="groupTitle.trim() && saveGroup()"
-            autocomplete="off"
-          />
-          <p class="field-hint">Pick a name you’ll recognize in the sidebar.</p>
-        </div>
-        <div class="field-block">
-          <span class="field-label" id="group-emoji-label">Icon</span>
-          <div class="emoji-field-row" role="group" aria-labelledby="group-emoji-label">
-            <input
-              class="field field--emoji"
-              type="text"
-              [(ngModel)]="groupEmoji"
-              maxlength="4"
-              (keydown.enter)="groupTitle.trim() && saveGroup()"
-              aria-describedby="group-emoji-hint"
-            />
-            <div class="emoji-preview-tile" aria-hidden="true">{{ emojiPreview(groupEmoji, '📁') }}</div>
-          </div>
-          <p id="group-emoji-hint" class="field-hint">Emoji or symbol next to the collection title.</p>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" (click)="groupOpen.set(false)">Cancel</button>
-        <button type="button" class="btn-primary" (click)="saveGroup()" [disabled]="!groupTitle.trim()">
-          Create collection
-        </button>
-      </div>
-    </div>
-  </div>
-}
-
-@if (groupEditOpen()) {
-  <div
-    class="modal-scrim"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="modal-edit-collection-title"
-    (click)="$event.target === $event.currentTarget && groupEditOpen.set(false)"
-  >
-    <div class="modal-panel modal-panel--sm modal-panel--sheet" (click)="$event.stopPropagation()">
-      <div class="modal-panel__head modal-panel__head--rich">
-        <div class="modal-panel__lead">
-          <span class="modal-panel__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-            </svg>
-          </span>
-          <div class="modal-panel__head-text">
-            <h2 id="modal-edit-collection-title" class="modal-panel__title">Edit collection</h2>
-            <p class="modal-panel__sub">Rename and choose an icon for this collection.</p>
-          </div>
-        </div>
-        <button type="button" class="modal-close" (click)="groupEditOpen.set(false)" aria-label="Close">×</button>
-      </div>
-      <div class="modal-form__stack">
-        <div class="field-block">
-          <label class="field-label" for="group-edit-title">Collection name</label>
-          <input
-            id="group-edit-title"
-            class="field"
-            type="text"
-            [(ngModel)]="groupEditTitle"
-            (keydown.enter)="groupEditTitle.trim() && saveGroupEdit()"
-            autocomplete="off"
-          />
-        </div>
-        <div class="field-block">
-          <span class="field-label" id="group-edit-emoji-label">Icon</span>
-          <div class="emoji-field-row" role="group" aria-labelledby="group-edit-emoji-label">
-            <input
-              class="field field--emoji"
-              type="text"
-              [(ngModel)]="groupEditEmoji"
-              maxlength="4"
-              (keydown.enter)="groupEditTitle.trim() && saveGroupEdit()"
-            />
-            <div class="emoji-preview-tile" aria-hidden="true">{{ emojiPreview(groupEditEmoji, '📁') }}</div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" (click)="groupEditOpen.set(false)">Cancel</button>
-        <button type="button" class="btn-primary" (click)="saveGroupEdit()" [disabled]="!groupEditTitle.trim()">
-          Save changes
-        </button>
-      </div>
-    </div>
-  </div>
-}
-
-@if (groupLinkOpen()) {
-  <div
-    class="modal-scrim"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="modal-add-collection-link-title"
-    (click)="$event.target === $event.currentTarget && groupLinkOpen.set(false)"
-  >
-    <div class="modal-panel modal-panel--sm modal-panel--sheet" (click)="$event.stopPropagation()">
-      <div class="modal-panel__head modal-panel__head--rich">
-        <div class="modal-panel__lead">
-          <span class="modal-panel__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M10 13a5 5 0 0 1 0-7l1-1a5 5 0 0 1 7 7l-1 1" />
-              <path d="M14 11a5 5 0 0 1 0 7l-1 1a5 5 0 0 1-7-7l1-1" />
-            </svg>
-          </span>
-          <div class="modal-panel__head-text">
-            <h2 id="modal-add-collection-link-title" class="modal-panel__title">{{ groupLinkModalTitle() }}</h2>
-            <p class="modal-panel__sub">{{ groupLinkModalSubtitle() }}</p>
-          </div>
-        </div>
-        <button type="button" class="modal-close" (click)="groupLinkOpen.set(false)" aria-label="Close">×</button>
-      </div>
-      <div class="modal-form__stack">
-        <div class="field-block">
-          <label class="field-label" for="group-link-title">Label</label>
-          <input
-            id="group-link-title"
-            class="field"
-            type="text"
-            [(ngModel)]="groupLinkTitle"
-            placeholder="e.g. Runbook, Dashboard"
-            autocomplete="off"
-          />
-        </div>
-        <div class="field-block">
-          <label class="field-label" for="group-link-url">URL</label>
-          <input
-            id="group-link-url"
-            class="field"
-            type="url"
-            [(ngModel)]="groupLinkUrl"
-            placeholder="https://example.com"
-            (keydown.enter)="groupLinkFormValid() && saveGroupLink()"
-          />
-          <p class="field-hint">https:// is added automatically if you omit it.</p>
-        </div>
-        <div class="field-block">
-          <span class="field-label" id="group-link-emoji-label">Icon</span>
-          <div class="emoji-field-row" role="group" aria-labelledby="group-link-emoji-label">
-            <input
-              class="field field--emoji"
-              type="text"
-              [(ngModel)]="groupLinkEmoji"
-              maxlength="4"
-              (keydown.enter)="groupLinkFormValid() && saveGroupLink()"
-            />
-            <div class="emoji-preview-tile" aria-hidden="true">{{ emojiPreview(groupLinkEmoji, '🔗') }}</div>
-          </div>
-          <p class="field-hint">Emoji fallback if favicon can’t be loaded.</p>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" (click)="groupLinkOpen.set(false)">Cancel</button>
-        <button type="button" class="btn-primary" (click)="saveGroupLink()" [disabled]="!groupLinkFormValid()">
-          {{ groupLinkModalAction() }}
-        </button>
-      </div>
-    </div>
-  </div>
-}
-
-@if (widgetOpen()) {
-  <div
-    class="modal-scrim"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="modal-custom-widget-title"
-    (click)="$event.target === $event.currentTarget && widgetOpen.set(false)"
-  >
-    <div class="modal-panel modal-panel--sm modal-panel--sheet modal-panel--lg" (click)="$event.stopPropagation()">
-      <div class="modal-panel__head modal-panel__head--rich">
-        <div class="modal-panel__lead">
-          <span class="modal-panel__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M16 18l6-6-6-6" />
-              <path d="M8 6l-6 6 6 6" />
-            </svg>
-          </span>
-          <div class="modal-panel__head-text">
-            <h2 id="modal-custom-widget-title" class="modal-panel__title">Custom widget</h2>
-            <p class="modal-panel__sub">HTML, CSS and JS run in a sandboxed iframe.</p>
-          </div>
-        </div>
-        <button type="button" class="modal-close" (click)="widgetOpen.set(false)" aria-label="Close">×</button>
-      </div>
-      <div class="modal-form__stack">
-        <div class="field-block">
-          <label class="field-label" for="widget-title">Title</label>
-          <input id="widget-title" class="field" type="text" maxlength="60" [(ngModel)]="widgetTitle" />
-        </div>
-        <div class="field-row">
-          <div class="field-block field-block--half">
-            <label class="field-label" for="widget-example">Template (optional)</label>
-            <select id="widget-example" class="field" [(ngModel)]="widgetExample" (ngModelChange)="applyWidgetExample($event)">
-              <option value="blank">No template</option>
-              <option value="clock">Live Clock</option>
-              <option value="progress">Progress Ring</option>
-            </select>
-            <p class="field-hint">Choose a template to prefill code, or leave it as No template.</p>
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field-block field-block--half">
-            <label class="field-label" for="widget-width">Width</label>
-            <input id="widget-width" class="field" type="number" min="3" max="8" step="1" [(ngModel)]="widgetWidth" />
-          </div>
-          <div class="field-block field-block--half">
-            <label class="field-label" for="widget-height">Height</label>
-            <input id="widget-height" class="field" type="number" min="2" max="6" step="1" [(ngModel)]="widgetHeight" />
-          </div>
-        </div>
-        <details class="widget-guide">
-          <summary class="widget-guide__summary">Widget guide for you or your AI</summary>
-          <div class="widget-guide__body">
-            <p class="widget-guide__text">
-              Widgets run in a sandboxed iframe. Use plain HTML, CSS and JS. Avoid real form submission, avoid
-              <code>localStorage</code>, and use the provided storage bridge for persistence.
-            </p>
-            <div class="widget-guide__section">
-              <div class="widget-guide__label">Supported persistence API</div>
-              <pre class="widget-guide__code"><code [textContent]="widgetBridgeExample"></code></pre>
-            </div>
-            <div class="widget-guide__section">
-              <div class="widget-guide__label">Important rules</div>
-              <ul class="widget-guide__list">
-                <li>Do not use a real <code>&lt;form&gt;</code> submit flow. Use button click handlers instead.</li>
-                <li>Keep state JSON-serializable and reasonably small.</li>
-                <li>Links can open in a new tab. Widget state is saved through the homepage app.</li>
-                <li>When logged in, saved widget state syncs through the backend with the rest of the dashboard.</li>
-              </ul>
-            </div>
-            <div class="widget-guide__section">
-              <div class="widget-guide__label">Prompt for AI</div>
-              <textarea
-                class="notes-field code-field widget-guide__prompt"
-                rows="9"
-                readonly
-                [value]="widgetAiPrompt"
-              ></textarea>
-            </div>
-          </div>
-        </details>
-        <div class="field-block">
-          <label class="field-label" for="widget-html">HTML</label>
-          <textarea id="widget-html" class="notes-field code-field" rows="7" [(ngModel)]="widgetHtml"></textarea>
-        </div>
-        <div class="field-block">
-          <label class="field-label" for="widget-css">CSS</label>
-          <textarea id="widget-css" class="notes-field code-field" rows="7" [(ngModel)]="widgetCss"></textarea>
-        </div>
-        <div class="field-block">
-          <label class="field-label" for="widget-js">JS</label>
-          <textarea id="widget-js" class="notes-field code-field" rows="7" [(ngModel)]="widgetJs"></textarea>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" (click)="widgetOpen.set(false)">Cancel</button>
-        <button type="button" class="btn-primary" (click)="saveWidget()">Save widget</button>
-      </div>
-    </div>
-  </div>
-}
-
-@if (sizeOpen()) {
-  <div
-    class="modal-scrim"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="modal-card-size-title"
-    (click)="$event.target === $event.currentTarget && sizeOpen.set(false)"
-  >
-    <div class="modal-panel modal-panel--sm modal-panel--sheet" (click)="$event.stopPropagation()">
-      <div class="modal-panel__head">
-        <h2 id="modal-card-size-title" class="modal-panel__title">{{ sizeTitle() }}</h2>
-        <button type="button" class="modal-close" (click)="sizeOpen.set(false)" aria-label="Close">×</button>
-      </div>
-      <div class="modal-form__stack">
-        <div class="field-row">
-          <div class="field-block field-block--half">
-            <label class="field-label" for="card-width">Width</label>
-            <input id="card-width" class="field" type="number" min="1" max="8" step="1" [(ngModel)]="sizeWidth" />
-          </div>
-          <div class="field-block field-block--half">
-            <label class="field-label" for="card-height">Height</label>
-            <input id="card-height" class="field" type="number" min="1" max="6" step="1" [(ngModel)]="sizeHeight" />
-          </div>
-        </div>
-        <p class="field-hint">If the new size would overlap another card, we’ll keep the current size.</p>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" (click)="sizeOpen.set(false)">Cancel</button>
-        <button type="button" class="btn-primary" (click)="saveItemSize()">Save size</button>
-      </div>
-    </div>
-  </div>
-}
+  <app-size-modal
+    [open]="sizeOpen()"
+    [target]="sizeTarget()"
+    [initialWidth]="sizeInitialWidth"
+    [initialHeight]="sizeInitialHeight"
+    (closed)="sizeOpen.set(false)"
+    (saved)="onSizeSaved($event)"
+  ></app-size-modal>
 </div>

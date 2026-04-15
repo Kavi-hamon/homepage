@@ -1,0 +1,122 @@
+@if (groupOpen) {
+  <div class="modal-scrim" role="dialog" aria-modal="true" aria-labelledby="modal-new-collection-title" (click)="$event.target === $event.currentTarget && groupClosed.emit()">
+    <div class="modal-panel modal-panel--sm modal-panel--sheet" (click)="$event.stopPropagation()">
+      <div class="modal-panel__head modal-panel__head--rich">
+        <div class="modal-panel__lead">
+          <span class="modal-panel__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            </svg>
+          </span>
+          <div class="modal-panel__head-text">
+            <h2 id="modal-new-collection-title" class="modal-panel__title">New collection</h2>
+            <p class="modal-panel__sub">Group related links—open the whole set at once when you need to.</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close" (click)="groupClosed.emit()" aria-label="Close">×</button>
+      </div>
+      <div class="modal-form__stack">
+        <div class="field-block">
+          <label class="field-label" for="group-title">Collection name</label>
+          <input id="group-title" class="field" type="text" [(ngModel)]="groupTitle" placeholder="e.g. Dev tools, Morning reads" (keydown.enter)="groupTitle.trim() && saveGroup()" autocomplete="off" />
+          <p class="field-hint">Pick a name you'll recognize in the sidebar.</p>
+        </div>
+        <div class="field-block">
+          <span class="field-label" id="group-emoji-label">Icon</span>
+          <div class="emoji-field-row" role="group" aria-labelledby="group-emoji-label">
+            <input class="field field--emoji" type="text" [(ngModel)]="groupEmoji" maxlength="4" (keydown.enter)="groupTitle.trim() && saveGroup()" aria-describedby="group-emoji-hint" />
+            <div class="emoji-preview-tile" aria-hidden="true">{{ emojiPreview(groupEmoji, '📁') }}</div>
+          </div>
+          <p id="group-emoji-hint" class="field-hint">Emoji or symbol next to the collection title.</p>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="groupClosed.emit()">Cancel</button>
+        <button type="button" class="btn-primary" (click)="saveGroup()" [disabled]="!groupTitle.trim()">Create collection</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (groupEditOpen) {
+  <div class="modal-scrim" role="dialog" aria-modal="true" aria-labelledby="modal-edit-collection-title" (click)="$event.target === $event.currentTarget && groupEditClosed.emit()">
+    <div class="modal-panel modal-panel--sm modal-panel--sheet" (click)="$event.stopPropagation()">
+      <div class="modal-panel__head modal-panel__head--rich">
+        <div class="modal-panel__lead">
+          <span class="modal-panel__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            </svg>
+          </span>
+          <div class="modal-panel__head-text">
+            <h2 id="modal-edit-collection-title" class="modal-panel__title">Edit collection</h2>
+            <p class="modal-panel__sub">Rename and choose an icon for this collection.</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close" (click)="groupEditClosed.emit()" aria-label="Close">×</button>
+      </div>
+      <div class="modal-form__stack">
+        <div class="field-block">
+          <label class="field-label" for="group-edit-title">Collection name</label>
+          <input id="group-edit-title" class="field" type="text" [(ngModel)]="groupEditTitle" (keydown.enter)="groupEditTitle.trim() && saveGroupEdit()" autocomplete="off" />
+        </div>
+        <div class="field-block">
+          <span class="field-label" id="group-edit-emoji-label">Icon</span>
+          <div class="emoji-field-row" role="group" aria-labelledby="group-edit-emoji-label">
+            <input class="field field--emoji" type="text" [(ngModel)]="groupEditEmoji" maxlength="4" (keydown.enter)="groupEditTitle.trim() && saveGroupEdit()" />
+            <div class="emoji-preview-tile" aria-hidden="true">{{ emojiPreview(groupEditEmoji, '📁') }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="groupEditClosed.emit()">Cancel</button>
+        <button type="button" class="btn-primary" (click)="saveGroupEdit()" [disabled]="!groupEditTitle.trim()">Save changes</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (groupLinkOpen) {
+  <div class="modal-scrim" role="dialog" aria-modal="true" aria-labelledby="modal-add-collection-link-title" (click)="$event.target === $event.currentTarget && groupLinkClosed.emit()">
+    <div class="modal-panel modal-panel--sm modal-panel--sheet" (click)="$event.stopPropagation()">
+      <div class="modal-panel__head modal-panel__head--rich">
+        <div class="modal-panel__lead">
+          <span class="modal-panel__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 1 0-7l1-1a5 5 0 0 1 7 7l-1 1" />
+              <path d="M14 11a5 5 0 0 1 0 7l-1 1a5 5 0 0 1-7-7l1-1" />
+            </svg>
+          </span>
+          <div class="modal-panel__head-text">
+            <h2 id="modal-add-collection-link-title" class="modal-panel__title">{{ groupLinkModalTitle }}</h2>
+            <p class="modal-panel__sub">{{ groupLinkModalSubtitle }}</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close" (click)="groupLinkClosed.emit()" aria-label="Close">×</button>
+      </div>
+      <div class="modal-form__stack">
+        <div class="field-block">
+          <label class="field-label" for="group-link-title">Label</label>
+          <input id="group-link-title" class="field" type="text" [(ngModel)]="groupLinkTitle" placeholder="e.g. Runbook, Dashboard" autocomplete="off" />
+        </div>
+        <div class="field-block">
+          <label class="field-label" for="group-link-url">URL</label>
+          <input id="group-link-url" class="field" type="url" [(ngModel)]="groupLinkUrl" placeholder="https://example.com" (keydown.enter)="groupLinkFormValid && saveGroupLink()" />
+          <p class="field-hint">https:// is added automatically if you omit it.</p>
+        </div>
+        <div class="field-block">
+          <span class="field-label" id="group-link-emoji-label">Icon</span>
+          <div class="emoji-field-row" role="group" aria-labelledby="group-link-emoji-label">
+            <input class="field field--emoji" type="text" [(ngModel)]="groupLinkEmoji" maxlength="4" (keydown.enter)="groupLinkFormValid && saveGroupLink()" />
+            <div class="emoji-preview-tile" aria-hidden="true">{{ emojiPreview(groupLinkEmoji, '🔗') }}</div>
+          </div>
+          <p class="field-hint">Emoji fallback if favicon can't be loaded.</p>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="groupLinkClosed.emit()">Cancel</button>
+        <button type="button" class="btn-primary" (click)="saveGroupLink()" [disabled]="!groupLinkFormValid">{{ groupLinkModalAction }}</button>
+      </div>
+    </div>
+  </div>
+}

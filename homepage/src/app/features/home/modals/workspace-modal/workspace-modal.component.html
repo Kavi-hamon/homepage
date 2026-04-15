@@ -1,0 +1,77 @@
+@if (tabEditOpen) {
+  <div
+    class="modal-scrim"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-workspace-edit-title"
+    (click)="$event.target === $event.currentTarget && tabEditClosed.emit()"
+  >
+    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
+      <div class="modal-panel__head">
+        <h2 id="modal-workspace-edit-title" class="modal-panel__title">Workspace</h2>
+        <button type="button" class="modal-close" (click)="tabEditClosed.emit()" aria-label="Close">×</button>
+      </div>
+      <label class="field-label">Name</label>
+      <input class="field" type="text" maxlength="40" [(ngModel)]="localTabName" />
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="tabEditClosed.emit()">Cancel</button>
+        @if (tabCount > 1) {
+          <button type="button" class="btn-danger" (click)="tabDeleted.emit()">Delete</button>
+        }
+        <button type="button" class="btn-primary" (click)="saveTabName()">Save</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (newWorkspaceOpen) {
+  <div
+    class="modal-scrim"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-new-workspace-title"
+    (click)="$event.target === $event.currentTarget && newWorkspaceClosed.emit()"
+  >
+    <div class="modal-panel modal-panel--sm modal-panel--sheet" (click)="$event.stopPropagation()">
+      <div class="modal-panel__head modal-panel__head--rich">
+        <div class="modal-panel__lead">
+          <span class="modal-panel__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1.5" />
+              <rect x="14" y="3" width="7" height="7" rx="1.5" />
+              <rect x="3" y="14" width="7" height="7" rx="1.5" />
+              <rect x="14" y="14" width="7" height="7" rx="1.5" />
+            </svg>
+          </span>
+          <div class="modal-panel__head-text">
+            <h2 id="modal-new-workspace-title" class="modal-panel__title">New workspace</h2>
+            <p class="modal-panel__sub">A separate board of shortcuts, collections, and widgets.</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close" (click)="newWorkspaceClosed.emit()" aria-label="Close">×</button>
+      </div>
+      <div class="modal-form__stack">
+        <div class="field-block">
+          <label class="field-label" for="new-workspace-name">Workspace name</label>
+          <input
+            id="new-workspace-name"
+            class="field"
+            type="text"
+            maxlength="40"
+            [(ngModel)]="localWorkspaceName"
+            (keydown.enter)="saveNewWorkspace()"
+            placeholder="e.g. Work, Personal, Study"
+            autocomplete="off"
+          />
+          <p class="field-hint">Up to 40 characters. You can rename anytime from the tab menu.</p>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="newWorkspaceClosed.emit()">Cancel</button>
+        <button type="button" class="btn-primary" (click)="saveNewWorkspace()" [disabled]="!localWorkspaceName.trim()">
+          Create workspace
+        </button>
+      </div>
+    </div>
+  </div>
+}

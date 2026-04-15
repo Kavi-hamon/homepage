@@ -1,0 +1,108 @@
+@if (open) {
+  <div class="modal-scrim" role="dialog" aria-modal="true" aria-labelledby="settings-heading" (click)="$event.target === $event.currentTarget && closed.emit()">
+    <div class="modal-panel" (click)="$event.stopPropagation()">
+      <div class="modal-panel__head">
+        <h2 id="settings-heading" class="modal-panel__title">Settings</h2>
+        <button type="button" class="modal-close" (click)="closed.emit()" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <section class="modal-section">
+          <h3 class="modal-section__label">Appearance</h3>
+          <div class="chip-row">
+            @for (t of THEMES; track t.id) {
+              <button
+                type="button"
+                class="chip"
+                [class.chip--on]="state.data().settings.theme === t.id"
+                (click)="setTheme(t.id)"
+              >{{ t.label }}</button>
+            }
+          </div>
+        </section>
+        <section class="modal-section">
+          <h3 class="modal-section__label">Wallpaper</h3>
+          <div class="wall-grid">
+            @for (p of WALL_PRESETS; track p.id) {
+              <button
+                type="button"
+                class="wall-tile"
+                [class.wall-tile--on]="state.data().settings.wallpaper === p.id"
+                [attr.style]="wallOptStyle(p.id)"
+                (click)="setWallpaper(p.id)"
+              ><span>{{ p.label }}</span></button>
+            }
+            <button
+              type="button"
+              class="wall-tile wall-tile--custom"
+              [class.wall-tile--on]="state.data().settings.wallpaper === 'custom'"
+              (click)="setWallpaper('custom')"
+            ><span>Custom URL</span></button>
+          </div>
+          <label class="field-label">Image URL</label>
+          <div class="field-row">
+            <input #customWall class="field" type="url" placeholder="https://…" [value]="state.data().settings.customWallUrl" />
+            <button type="button" class="btn-secondary" (click)="applyCustomWall(customWall.value)">Apply</button>
+          </div>
+          <div class="slider-block">
+            <span class="slider-block__label">Dim</span>
+            <input type="range" min="0.3" max="0.92" step="0.02" [value]="state.data().settings.overlay" (input)="onOverlayInput(+$any($event.target).value)" />
+            <span class="slider-block__val">{{ (state.data().settings.overlay * 100) | number: '1.0-0' }}%</span>
+          </div>
+          <div class="slider-block">
+            <span class="slider-block__label">Blur</span>
+            <input type="range" min="0" max="28" step="1" [value]="state.data().settings.blur" (input)="onBlurInput(+$any($event.target).value)" />
+            <span class="slider-block__val">{{ state.data().settings.blur }}px</span>
+          </div>
+          <p class="settings-hint settings-hint--compact">
+            <strong>Dim</strong> adds a dark/light wash over the wallpaper — slide it <strong>right</strong> if cards or text need more contrast.
+          </p>
+          @if (!wallpaperUseGradient()) {
+            <p class="settings-hint">Photo wallpapers use a lighter frost so the picture stays visible. Cards use a neutral tint so they read on bright or dark photos—raise <strong>Dim</strong> if text feels low-contrast.</p>
+          }
+        </section>
+        <section class="modal-section">
+          <h3 class="modal-section__label">Search</h3>
+          <div class="chip-row">
+            @for (e of engines; track e) {
+              <button type="button" class="chip" [class.chip--on]="state.data().settings.searchEngine === e" (click)="setEngine(e)">{{ e | titlecase }}</button>
+            }
+          </div>
+        </section>
+        <section class="modal-section">
+          <h3 class="modal-section__label">Display</h3>
+          <label class="check-row">
+            <input type="checkbox" [checked]="state.data().settings.showClock" (change)="toggleShowClock($any($event.target).checked)" />
+            <span>Show clock &amp; greeting</span>
+          </label>
+          <label class="field-label">Your name</label>
+          <input class="field" type="text" [value]="state.data().settings.userName" (change)="setUserName($any($event.target).value)" placeholder="there" />
+        </section>
+        <section class="modal-section">
+          <h3 class="modal-section__label">Set as Homepage</h3>
+          <p class="settings-hint settings-hint--compact">
+            Follow these steps to set this page as your <strong>{{ detectedBrowser() }}</strong> homepage and enable the home button in your toolbar:
+          </p>
+          <ol class="homepage-steps">
+            @for (step of homepageSteps(); track $index) {
+              <li>{{ step }}</li>
+            }
+          </ol>
+          <label class="field-label">Your homepage URL</label>
+          <div class="field-row">
+            <input class="field" readonly [value]="pageUrl()" />
+            <button type="button" class="btn-secondary" (click)="copyHomepageUrl()">Copy URL</button>
+          </div>
+        </section>
+        <section class="modal-section">
+          <h3 class="modal-section__label">Data</h3>
+          <div class="data-actions">
+            <button type="button" class="btn-secondary" (click)="exportData()">Export JSON</button>
+            <button type="button" class="btn-secondary" (click)="triggerImport(importInput)">Import</button>
+            <input #importInput type="file" accept=".json,application/json" hidden (change)="onImportFile($event)" />
+            <button type="button" class="btn-danger" (click)="resetAll()">Reset all data</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+}
