@@ -1,6 +1,6 @@
 import { Component, computed, DOCUMENT, EventEmitter, inject, Input, Output, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { THEMES, WALL_PRESETS, type ThemeId, type SearchEngine, SEARCH_ENGINES } from '../../../../core/models/homepage.models';
+import { THEMES, WALL_PRESETS, type ClockFormat, type ThemeId, type SearchEngine, SEARCH_ENGINES } from '../../../../core/models/homepage.models';
 import { HomepageStateService } from '../../../../core/services/homepage-state.service';
 
 const GRAD_STYLES: Record<string, string> = {
@@ -31,6 +31,10 @@ export class SettingsModalComponent {
   protected readonly THEMES = THEMES;
   protected readonly WALL_PRESETS = WALL_PRESETS;
   protected readonly engines: SearchEngine[] = ['google', 'duckduckgo', 'bing'];
+  protected readonly clockFormats: Array<{ id: ClockFormat; label: string }> = [
+    { id: '12h', label: '12-hour' },
+    { id: '24h', label: '24-hour' },
+  ];
 
   protected wallpaperUseGradient(): boolean {
     const s = this.state.data().settings;
@@ -85,6 +89,7 @@ export class SettingsModalComponent {
   protected onOverlayInput(v: number): void { this.state.patchSettings({ overlay: v }); }
   protected onBlurInput(v: number): void { this.state.patchSettings({ blur: v }); }
   protected toggleShowClock(checked: boolean): void { this.state.patchSettings({ showClock: checked }); }
+  protected setClockFormat(format: ClockFormat): void { this.state.patchSettings({ clockFormat: format }); }
   protected setUserName(name: string): void { this.state.patchSettings({ userName: name }); }
 
   protected copyHomepageUrl(): void {

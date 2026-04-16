@@ -74,6 +74,17 @@
             <input type="checkbox" [checked]="state.data().settings.showClock" (change)="toggleShowClock($any($event.target).checked)" />
             <span>Show clock &amp; greeting</span>
           </label>
+          <label class="field-label">Clock format</label>
+          <div class="chip-row">
+            @for (format of clockFormats; track format.id) {
+              <button
+                type="button"
+                class="chip"
+                [class.chip--on]="state.data().settings.clockFormat === format.id"
+                (click)="setClockFormat(format.id)"
+              >{{ format.label }}</button>
+            }
+          </div>
           <label class="field-label">Your name</label>
           <input class="field" type="text" [value]="state.data().settings.userName" (change)="setUserName($any($event.target).value)" placeholder="there" />
         </section>

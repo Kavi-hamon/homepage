@@ -67,6 +67,7 @@ export type ThemeId =
   | 'glass';
 
 export type SearchEngine = 'google' | 'duckduckgo' | 'bing';
+export type ClockFormat = '12h' | '24h';
 
 export interface HomepageSettings {
   theme: ThemeId;
@@ -76,6 +77,7 @@ export interface HomepageSettings {
   blur: number;
   searchEngine: SearchEngine;
   showClock: boolean;
+  clockFormat: ClockFormat;
   userName: string;
 }
 
@@ -177,6 +179,7 @@ export function defaultSettings(): HomepageSettings {
     blur: 12,
     searchEngine: 'google',
     showClock: true,
+    clockFormat: '24h',
     userName: '',
   };
 }

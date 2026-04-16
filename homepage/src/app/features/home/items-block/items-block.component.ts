@@ -70,6 +70,8 @@ export class ItemsBlockComponent {
   protected readonly dragPreview = signal<DragPreviewState | null>(null);
   private dragPointerOffset: DragPointerOffset | null = null;
   private readonly widgetSrcCache = new Map<string, { key: string; url: SafeResourceUrl }>();
+  private dragScrollRafId: number | null = null;
+  private dragScrollLastY = 0;
 
   @ViewChild('itemsGrid') private readonly itemsGridRef?: ElementRef<HTMLElement>;
 
@@ -232,6 +234,41 @@ export class ItemsBlockComponent {
     return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="${csp}"><style>html,body{margin:0;padding:0;height:100%;background:transparent;}*{box-sizing:border-box;}${widget.css}</style></head><body>${widget.html}<script>${safeScript}</script></body></html>`;
   }
 
+  // ── Drag auto-scroll ─────────────────────────────────────────
+
+  private readonly onDocDragOver = (event: DragEvent) => {
+    this.dragScrollLastY = event.clientY;
+  };
+
+  private startDragScroll(clientY: number): void {
+    this.dragScrollLastY = clientY;
+    document.addEventListener('dragover', this.onDocDragOver);
+    if (this.dragScrollRafId !== null) return;
+    const tick = () => {
+      const y = this.dragScrollLastY;
+      const zone = 80;
+      const maxSpeed = 14;
+      const vh = window.innerHeight;
+      let speed = 0;
+      if (y < zone) {
+        speed = -Math.round(maxSpeed * (1 - y / zone));
+      } else if (y > vh - zone) {
+        speed = Math.round(maxSpeed * (1 - (vh - y) / zone));
+      }
+      if (speed !== 0) window.scrollBy({ top: speed, behavior: 'instant' });
+      this.dragScrollRafId = requestAnimationFrame(tick);
+    };
+    this.dragScrollRafId = requestAnimationFrame(tick);
+  }
+
+  private stopDragScroll(): void {
+    document.removeEventListener('dragover', this.onDocDragOver);
+    if (this.dragScrollRafId !== null) {
+      cancelAnimationFrame(this.dragScrollRafId);
+      this.dragScrollRafId = null;
+    }
+  }
+
   // ── Drag & drop ──────────────────────────────────────────────
 
   private isTokenOccupied(candidate: GridItemLayout, key: DashboardToken): boolean {
@@ -262,7 +299,7 @@ export class ItemsBlockComponent {
     const offsetX = Math.max(0, event.clientX - rect.left - pointerOffset.x);
     const offsetY = Math.max(0, event.clientY - rect.top - pointerOffset.y);
     const x = Math.max(0, Math.min(metrics.columns - layout.w, Math.floor(offsetX / Math.max(1, metrics.columnWidth + metrics.gap))));
-    const y = Math.max(0, Math.floor(offsetY / Math.max(1, metrics.row + metrics.gap)));
+    const y = Math.max(0, Math.round(offsetY / Math.max(1, metrics.row + metrics.gap)));
     const candidate = { x, y, w: layout.w, h: layout.h };
     return { key: item.key as DashboardToken, ...candidate, valid: !this.isTokenOccupied(candidate, item.key as DashboardToken) };
   }
@@ -281,6 +318,7 @@ export class ItemsBlockComponent {
       this.dragPointerOffset = { x: Math.max(0, event.clientX - (handleRect?.left ?? event.clientX)), y: Math.max(0, event.clientY - (handleRect?.top ?? event.clientY)) };
     }
     this.dragPreview.set({ key: item.key as DashboardToken, x: layout.x, y: layout.y, w: layout.w, h: layout.h, valid: true });
+    this.startDragScroll(event.clientY);
   }
 
   protected onGridDragOver(event: DragEvent): void {
@@ -290,6 +328,7 @@ export class ItemsBlockComponent {
     const item = this.dashboardItems().find((entry) => entry.key === preview.key);
     if (!item) return;
     event.preventDefault();
+    this.dragScrollLastY = event.clientY;
     const next = this.previewFromPointer(event, item, grid);
     if (next) this.dragPreview.set(next);
   }
@@ -302,11 +341,13 @@ export class ItemsBlockComponent {
     if (!preview.valid || !this.state.placeTabItem(tab.id, preview.key, preview.x, preview.y)) {
       // Parent can show toast via action, but drag-drop result is self-contained
     }
+    this.stopDragScroll();
     this.dragPreview.set(null);
     this.dragPointerOffset = null;
   }
 
   protected onItemDragEnd(): void {
+    this.stopDragScroll();
     this.dragPreview.set(null);
     this.dragPointerOffset = null;
   }

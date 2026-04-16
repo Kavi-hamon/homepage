@@ -171,7 +171,12 @@ export class HomeComponent {
   // ── Clock ────────────────────────────────────────────────────
   private tickClock(): void {
     const n = new Date();
-    this.clock.set(n.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }));
+    const use12HourClock = this.state.data().settings.clockFormat === '12h';
+    this.clock.set(n.toLocaleTimeString(undefined, {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: use12HourClock,
+    }));
     this.dateLine.set(n.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }));
   }
 
